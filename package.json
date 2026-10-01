@@ -1,0 +1,18 @@
+{
+  "name": "@meddleware/eslint-config",
+  "version": "0.0.0",
+  "description": "Shared ESLint flat-config fragments for MeddleWare apps: the Sui chain-access boundary and URL-binding rules.",
+  "license": "0BSD",
+  "author": "MeddleWare <dev@meddleware.co.uk>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/meddleware-org/eslint-config.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "README.md",
+    "LICENSE"
+  ]
+}
