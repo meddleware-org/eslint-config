@@ -18,32 +18,59 @@ export default defineConfigWithVueTs(
 )
 ```
 
-Append it **last**, so its rule options are the ones in force. It relies on the `@typescript-eslint`
-and `vue` plugins the repo already registers (e.g. via `@vue/eslint-config-typescript` and
-`eslint-plugin-vue`).
+Append it **last**. It relies on the `@typescript-eslint` and `vue` plugins the repo already registers
+(e.g. via `@vue/eslint-config-typescript` and `eslint-plugin-vue`).
 
-## What it enforces (in `src/**/*.{ts,mts,tsx,vue}`, except `src/wallet.ts` and tests)
+**It replaces your own restriction rules.** ESLint does not merge rule options across config objects: for the
+files the boundary covers, its `no-restricted-syntax`, `vue/no-restricted-syntax` and
+`@typescript-eslint/no-restricted-imports` options replace yours, silently. Pass your own restrictions
+through `extraSyntax`, `extraTemplateSyntax` and `extraImportPaths` so they stay in force.
+
+## What it enforces (in `src/**/*.{ts,mts,cts,tsx,js,mjs,cjs,jsx,vue}`, except tests)
 
 | Rule | Refuses |
 | --- | --- |
-| `@typescript-eslint/no-restricted-imports` | runtime imports of `@mysten/sui/grpc`, `/client`, `/transactions` (type-only imports allowed); any import of `@mysten/sui/jsonRpc` |
-| `no-restricted-syntax` | `new Transaction()`; `.moveCall`, `.splitCoins`, `.mergeCoins`, `.transferObjects`, `.publish`, `.upgrade`, `.makeMoveVec`; `.getObject(s)`, `.listOwnedObjects`, `.getOwnedObjects`, `.listEvents`, `.queryEvents`; dynamic `import()` of the restricted paths |
-| `vue/no-restricted-syntax` | a bound `href`, `src`, `srcset`, `action`, `formaction`, `poster` or `data` on a native element unless it is a literal or a call to `safeHref`, `safeIcon`, `suiExplorerUrl`, `walruscanBlobUrl` |
+| `@typescript-eslint/no-restricted-imports` (core `no-restricted-imports` for `.js` files) | runtime imports of any `@mysten/sui/*` subpath except `utils` and `bcs` (type-only imports allowed); any import of `@mysten/sui/jsonRpc`, even type-only |
+| `no-restricted-syntax` | `new Transaction()` and its statics (`Transaction.from`); any reference to `moveCall`, `splitCoins`, `mergeCoins`, `transferObjects`, `makeMoveVec` (calls, `.bind`, destructuring, `tx['moveCall']`); calls to `publish`, `upgrade`; calls to `getObject(s)`, `listOwnedObjects`, `getOwnedObjects`, `listEvents`, `queryEvents`, `listCoins`, `listDynamicFields`, `getDynamicField`, `getTransaction`, `simulateTransaction`, `executeTransaction`; dynamic `import()` (string, template or concatenation) and `require()` of the restricted paths |
+| `vue/no-restricted-syntax` | on a native element (any tag case): a bound `href`, `src`, `srcset`, `action`, `formaction`, `poster`, `data`, `xlink:href`, `ping` or `imagesrcset` unless it is a literal, `undefined`, a call to `safeHref`, `safeIcon`, `suiExplorerUrl`, `walruscanBlobUrl`, or a ternary of those; any bound `srcdoc` or `<meta content>`; `v-bind="object"` and `:[dynamic]` names; `url(...)` in a bound `style` |
+| `vue/no-v-html` | `v-html` |
 
-Components are exempt from the template rule: a component sanitises its own props.
+Balance and epoch reads (`getBalance`, `listBalances`, `getCurrentSystemState`) are **allowed**: they are
+typed, domain-free queries. `src/wallet.ts` (the wallet shim, `walletFiles`) may import the client but
+still may not build transactions or read objects. Components are exempt from the template rule: a
+component sanitises its own props.
+
+### What it cannot do
+
+The selectors are name-based. They catch accidents and shortcuts (including an agent "fixing" lint by
+rewording a call), not evasion: a value passed through an arbitrary re-export or helper is not followed;
+a local `const safeHref = (u) => u` satisfies the template rule; `bus.upgrade()` and `x.publish()` calls are
+refused too (generic names), so a repository that uses them elsewhere should scope `files`. Review stays the
+control for anything a selector cannot see.
 
 ## Options
 
 ```ts
 suiBoundary({
-  files: ['src/**/*.{ts,vue}'],          // where the boundary applies
-  ignores: ['src/wallet.ts', '**/*.test.ts'],
+  files: ['app/**/*.{ts,vue}'],          // where the boundary applies (the template rule follows its .vue entries)
+  vueFiles: ['app/**/*.vue'],            // optional: override the derived .vue globs
+  ignores: ['**/*.test.ts'],             // exempt entirely (default: tests)
+  walletFiles: ['app/wallet.ts'],        // the wallet shim(s) (default: src/wallet.ts)
   urlHelpers: ['myCdnUrl'],              // extra URL helpers this repo provides
+  extraSyntax: [{ selector: 'ForInStatement', message: 'no for-in' }],
+  extraTemplateSyntax: [],               // your own vue/no-restricted-syntax entries
+  extraImportPaths: [{ name: 'lodash', message: 'use the platform' }],
 })
 ```
 
-The building blocks are exported too: `restrictedImportPaths`, `scriptRestrictions`,
-`templateUrlRestrictions(helpers)`, `URL_HELPERS`, `URL_ATTRIBUTES`.
+If no entry of `files` can match a `.vue` file, the template rule is simply not emitted.
+
+The building blocks are exported too: `restrictedImportOptions`, `scriptRestrictions`,
+`walletRestrictions`, `templateUrlRestrictions(helpers)`, `splitGlobs`, `vueGlobs`, `URL_HELPERS`,
+`URL_ATTRIBUTES`, `REFUSED_ATTRIBUTES`, `ALLOWED_SUI_SUBPATHS`.
+
+Use `eslint --report-unused-disable-directives` and require a reason on every `eslint-disable` of these
+rules: a disable also hides a real hit.
 
 ## License
 

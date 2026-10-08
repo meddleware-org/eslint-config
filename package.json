@@ -1,6 +1,6 @@
 {
   "name": "@meddleware/eslint-config",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "type": "module",
   "description": "Shared ESLint flat-config fragments for MeddleWare apps: the Sui chain-access boundary and URL-binding rules.",
   "license": "0BSD",
@@ -9,8 +9,17 @@
     "type": "git",
     "url": "git+https://github.com/meddleware-org/eslint-config.git"
   },
-  "keywords": ["eslint", "eslintconfig", "sui", "vue"],
-  "files": ["src", "dist", "CHANGELOG.md"],
+  "keywords": [
+    "eslint",
+    "eslintconfig",
+    "sui",
+    "vue"
+  ],
+  "files": [
+    "src",
+    "dist",
+    "CHANGELOG.md"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -37,5 +46,6 @@
   },
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "sideEffects": false
 }
