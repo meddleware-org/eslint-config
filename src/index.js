@@ -10,7 +10,7 @@
 // declares no plugins and has no runtime dependencies.
 
 /** Helpers whose return value is a safe URL (or undefined) for a native element binding. */
-export const URL_HELPERS = Object.freeze(['safeHref', 'safeIcon', 'suiExplorerUrl', 'walruscanBlobUrl'])
+export const URL_HELPERS = Object.freeze(['safeHref', 'safeIcon', 'safePath', 'suiExplorerUrl', 'walruscanBlobUrl'])
 
 /** Native-element attributes that load or navigate to a URL. */
 export const URL_ATTRIBUTES = Object.freeze([

@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.3] - 2026-10-18
+
+Pre-v0.2: breaking changes are patch releases.
+
+### Changed
+
+- **`safePath` is a trusted URL helper.** `@meddleware/ui` validates root-relative links with `safePath`
+  (single-slash, same-site, no control characters); a template binding `:href="safePath(x)"`, or a ternary
+  of `safePath` / `safeHref`, is now accepted like the other helpers. Trust is still by name (README).
+
 ## [0.0.2] - 2026-10-08
 
 Pre-v0.2: breaking changes are patch releases.

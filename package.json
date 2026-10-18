@@ -1,6 +1,6 @@
 {
   "name": "@meddleware/eslint-config",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "type": "module",
   "description": "Shared ESLint flat-config fragments for MeddleWare apps: the Sui chain-access boundary and URL-binding rules.",
   "license": "0BSD",

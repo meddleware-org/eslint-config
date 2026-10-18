@@ -85,7 +85,7 @@ describe('chain calls', () => {
 })
 
 describe('template URL bindings', () => {
-  const sfc = (tpl: string) => `<script setup lang="ts">\ndeclare const url: string\ndeclare function safeHref(u: string): string | undefined\ndeclare function toUrl(u: string): string\n</script>\n<template>${tpl}</template>`
+  const sfc = (tpl: string) => `<script setup lang="ts">\ndeclare const url: string, flag: boolean\ndeclare function safeHref(u: string): string | undefined\ndeclare function safePath(u: string): string | undefined\ndeclare function toUrl(u: string): string\n</script>\n<template>${tpl}</template>`
 
   it('refuses an unsanitised binding on a native element', () => {
     for (const tpl of ['<a :href="url">x</a>', '<img :src="url">', '<img v-bind:src="url">', '<form :action="url"></form>', '<img :src="toUrl(url)">']) {
@@ -94,7 +94,7 @@ describe('template URL bindings', () => {
   })
 
   it('accepts helper-wrapped bindings, literals and static template strings', () => {
-    for (const tpl of ['<a :href="safeHref(url)">x</a>', `<a :href="'/docs'">x</a>`, '<a :href="`/docs`">x</a>', '<a href="/static">x</a>']) {
+    for (const tpl of ['<a :href="safeHref(url)">x</a>', '<a :href="safePath(url)">x</a>', '<a :href="flag ? safePath(url) : safeHref(url)">x</a>', `<a :href="'/docs'">x</a>`, '<a :href="`/docs`">x</a>', '<a href="/static">x</a>']) {
       expect(lint(sfc(tpl), 'src/A.vue')).toEqual([])
     }
   })
@@ -194,7 +194,7 @@ describe('options', () => {
   })
 
   it('applies the template rule where the consumer put its components, not only under src', () => {
-    const sfc = '<script setup lang="ts">\ndeclare const url: string\n</script>\n<template><a :href="url">x</a></template>'
+    const sfc = '<script setup lang="ts">\ndeclare const url: string, flag: boolean\n</script>\n<template><a :href="url">x</a></template>'
     const opts = { files: ['app/**/*.{ts,vue}'] }
     expect(lint(sfc, 'app/A.vue', opts)).toContain('vue/no-restricted-syntax')
     expect(lint(sfc, 'src/A.vue', opts)).toEqual([])
@@ -255,6 +255,6 @@ describe('template sinks the first version missed', () => {
 
   it('escapes a helper name that contains a regular-expression character', () => {
     const tpl = '<img :src="toUrl$(url)">'
-    expect(lint(`<script setup lang="ts">\ndeclare const url: string\ndeclare function toUrl$(u: string): string\n</script>\n<template>${tpl}</template>`, 'src/A.vue', { urlHelpers: ['toUrl$'] })).toEqual([])
+    expect(lint(`<script setup lang="ts">\ndeclare const url: string, flag: boolean\ndeclare function toUrl$(u: string): string\n</script>\n<template>${tpl}</template>`, 'src/A.vue', { urlHelpers: ['toUrl$'] })).toEqual([])
   })
 })
