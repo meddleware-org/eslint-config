@@ -26,17 +26,21 @@ script rules against the ADR-0001 boundary as stated in consumers' CLAUDE.md fil
 
 **Deployment status:**
 
-- npm **`0.0.2` is `latest`** (published 2026-10-08 10:46Z, OIDC provenance attestation present); tag
-  `v0.0.2` → `5e959bf` (2026-10-08). `0.0.1` is published too (2026-10-08 02:43Z, provenance); tag
-  `v0.0.1` → `336c566`. Both tags are lightweight (unsigned).
-- HEAD `0a7ca84` (2026-10-09) is a Dependabot lockfile bump after `v0.0.2`; it changes no shipped file
-  and is not released.
+- npm **`0.0.3` is `latest`** (published 2026-10-18 14:48Z, OIDC provenance attestation present); tag
+  `v0.0.3` → `504e4c5` ("safePath is a trusted URL helper; 0.0.3"; HEAD). `0.0.2` (2026-10-08 10:46Z,
+  provenance; tag `v0.0.2` → `5e959bf`) and `0.0.1` (2026-10-08 02:43Z, provenance; tag `v0.0.1` →
+  `336c566`) are published too. All three tags are lightweight (unsigned).
+- `0.0.3` adds `safePath` to the trusted URL helpers (`URL_HELPERS`, `src/index.js:13`) because
+  `@meddleware/ui` validates root-relative links with it; README rule row and CHANGELOG updated; tests
+  cover `safePath(url)` and the ternary `flag ? safePath(url) : safeHref(url)`.
+- `0a7ca84` (2026-10-09) was a Dependabot lockfile bump after `v0.0.2`; it shipped in `0.0.3` and changes
+  no shipped file.
 - npm `0.0.0` (the 3-file, 1,338-byte placeholder, no provenance) was **deprecated 2026-10-09**
   (`Placeholder release; use 0.0.1 or later.`).
-- **All eight consumers apply `suiBoundary()` at `^0.0.2`** (adopted 2026-10-08; F1). `landing` and
-  `ui` do not (F13).
+- **All ten consumers apply `suiBoundary()`** (F1, F13). Eight adopted at `^0.0.2` on 2026-10-08;
+  `landing` (`45e3d92`) and `ui` (`60e0a9d`) adopted at `^0.0.3` on 2026-10-18.
 
-**Review date:** 2026-10-03; re-verified 2026-10-09
+**Review date:** 2026-10-03; re-verified 2026-10-09 and 2026-10-18
 **Reviewer:** Internal review
 **Severity ceiling:** Medium.
 
@@ -48,9 +52,10 @@ script rules against the ADR-0001 boundary as stated in consumers' CLAUDE.md fil
   audits (VUE-M1, ADR-0001) count on.
 - Realised ceiling at this pass: **Low**.
 
-**Status:** re-verified 2026-10-09. First-pass baseline 2026-10-03 (no predecessor audit); F1–F9 were
-remediated in `0.0.2` and the package is in force in eight consumers. Three findings were added at the
-re-verification (F12–F14).
+**Status:** re-verified 2026-10-18. First-pass baseline 2026-10-03 (no predecessor audit); F1–F9 were
+remediated in `0.0.2` and the package is in force in ten consumers. Three findings were added at the
+2026-10-09 re-verification (F12–F14); F13 and F14 were resolved by 2026-10-18 (consumer repos, `0.0.3`).
+Only the external review is open.
 
 **Front matter (TS lens):**
 
@@ -62,10 +67,9 @@ re-verification (F12–F14).
 | Runtime targets | Node, running ESLint |
 | Peer dependencies | `eslint ^10.0.0` (plugins `@typescript-eslint` and `vue` deliberately undeclared; the consumer registers them) |
 | Runtime dependencies | none |
-| Intended consumers (CLAUDE.md) | walrus-ui, walrus-relay, access-gate-ui, seal-ui, dao-ui, treasury-ui, token-deployer-ui, dashboard, landing. The first eight apply `suiBoundary()` at `^0.0.2`; `landing` does not (F13). All use `@vue/eslint-config-typescript ^14.9.0`. |
+| Intended consumers (CLAUDE.md) | walrus-ui, walrus-relay, access-gate-ui, seal-ui, dao-ui, treasury-ui, token-deployer-ui, dashboard, landing; also `ui` (adopted 2026-10-18, F13). The first eight apply `suiBoundary()` at `^0.0.2`; `landing` and `ui` at `^0.0.3`. All use `@vue/eslint-config-typescript ^14.9.0`. |
 
-**Location:** `eslint-config/docs/audit/eslint-config-audit.md`. This is a new directory in the
-repo (not yet committed at 2026-10-09).
+**Location:** `eslint-config/docs/audit/eslint-config-audit.md`.
 
 > **Access note:** `meddleware-org/eslint-config` was not in the first session's attached repository
 > list. It is public, so it was cloned read-only; the workspace checkout `repos/eslint-config` is used
@@ -75,7 +79,7 @@ repo (not yet committed at 2026-10-09).
 
 ## Executive summary
 
-The package is one 308-line module (`src/index.js`) and one fixture test file (35 tests). It exports:
+The package is one module (`src/index.js`, about 308 lines) and one fixture test file (35 tests). It exports:
 
 - `suiBoundary(options)`, which returns up to four flat-config objects (TS/Vue script rules, plain-JS
   rules, the wallet shim, the Vue template rule);
@@ -83,12 +87,14 @@ The package is one 308-line module (`src/index.js`) and one fixture test file (3
   `templateUrlRestrictions`, `splitGlobs`, `vueGlobs`, `URL_HELPERS`, `URL_ATTRIBUTES`,
   `REFUSED_ATTRIBUTES` and `ALLOWED_SUI_SUBPATHS`.
 
-**State at 2026-10-09:** the first pass (2026-10-03, `0f2ee0d`) found nothing in force and several
-coverage gaps. `0.0.2` (2026-10-08, `5e959bf`) fixed F2–F9, `0.0.1` and `0.0.2` are on npm with
-provenance, and all eight consumers apply `suiBoundary()` at `^0.0.2` and lint clean (F1). The `0.0.0`
-placeholder was deprecated on npm 2026-10-09.
+**State at 2026-10-18:** the first pass (2026-10-03, `0f2ee0d`) found nothing in force and several
+coverage gaps. `0.0.2` (2026-10-08, `5e959bf`) fixed F2–F9; `0.0.1`, `0.0.2` and `0.0.3` are on npm with
+provenance. Eight consumers applied `suiBoundary()` at `^0.0.2` and lint clean (F1). On 2026-10-18
+`0.0.3` added `safePath` to the trusted URL helpers, and `landing` and `ui` adopted the boundary, so ten
+consumers now apply it and lint clean (F13); consumer CI no longer skips the lint step with
+`--if-present` (F14, resolved 2026-10-10). The `0.0.0` placeholder was deprecated on npm 2026-10-09.
 
-**What holds (verified 2026-10-09):**
+**What holds (verified 2026-10-09; consumer adoption and CI re-verified 2026-10-18):**
 
 - **Fixture tests in both directions.** 35 tests through ESLint's `Linter`, with the same parsers the
   apps use (`typescript-eslint`, `vue-eslint-parser`). Each selector has a "reported" case and an
@@ -102,34 +108,35 @@ placeholder was deprecated on npm 2026-10-09.
   destructuring, computed), and the object, event, coin, dynamic-field and transaction reads are refused.
   Balance and epoch reads are allowed on purpose (OQ1 decided).
 - **Template rule.** URL attributes bound on native elements (any tag case) must be a literal, a static
-  template string, `undefined`, a call to a named helper or a ternary of those. `srcdoc`, `<meta content>`,
-  argument-less `v-bind`, dynamic names, `url()` in `style` and `v-html` are refused. Components are exempt
-  by design.
+  template string, `undefined`, a call to a trusted helper (`safeHref`, `safeIcon`, `safePath`,
+  `suiExplorerUrl`, `walruscanBlobUrl`) or a ternary of those. `srcdoc`, `<meta content>`,
+  argument-less `v-bind`, dynamic names, `url()` in `style` and `v-html` are refused. Components are
+  exempt by design.
 - **Package hygiene.** No runtime dependencies; frozen exported constants; `checkJs` + `strict`;
   declarations built for consumers; `files` whitelist (6 files, 9.1 kB packed); `sideEffects: false`;
   SECURITY.md.
 - **Release chain.** SHA-pinned actions, actionlint by digest, `npm audit` in CI and publish, OIDC
   `--provenance`, tag = version, the tag workflow runs the same workflow as CI, Dependabot.
-- **In force.** The eight consumers pass under the default options.
+- **In force.** The ten consumers pass under the default options (eight at `^0.0.2`, `landing` and `ui` at `^0.0.3`).
 
 **Findings (14 recorded; none above Low):**
 
-- **Resolved (F1–F9):** F1 (published and adopted), F2 (`files` handling), F3 (`extra*` options),
-  F4 (script variants; OQ1 decided), F5 (template sinks and `vue/no-v-html`), F6, F7 (wallet shim), F8, F9.
+- **Resolved (F1–F9, F13, F14):** F1 (published and adopted), F2 (`files` handling), F3 (`extra*`
+  options; OQ2 decided), F4 (script variants; OQ1 decided), F5 (template sinks and `vue/no-v-html`), F6,
+  F7 (wallet shim), F8, F9, F13 (`landing` and `ui` apply the boundary; `0.0.3` adds `safePath`; one real
+  violation in `ui` fixed), F14 (consumer CI no longer uses `--if-present` on the lint step).
 - **Accepted risk (F12):** residual evasion forms of a name-based rule (`tx.add`, aliased `Transaction`,
   destructured reads, `:innerHTML.prop`, local helpers named like trusted ones).
-- **Deferred (F13, F14):** `landing` and `ui` do not apply the boundary (S2; pre-mainnet gate), and
-  consumer CI runs `lint:js` with `--if-present` (pre-mainnet gate).
 - **Positive (F10, F11).**
 
 **Posture:**
 
 - The package is small, well-tested in both directions, dependency-free, published with provenance and
-  in force in eight consumers.
+  in force in ten consumers.
 - The remaining limits (F12) are inherent to name-based selectors and are stated in the README,
   CLAUDE.md and SECURITY.md. Treat it as an accident-catcher for developers and agents, not as a
   guarantee; consumer audits should cite A3–A6 below, not "enforced by `@meddleware/eslint-config`".
-- Open for mainnet: F13, F14, and external review.
+- Open for mainnet: external review only (maintainer item).
 
 ---
 
@@ -137,9 +144,9 @@ placeholder was deprecated on npm 2026-10-09.
 
 | Actor / source | Controls | Can do | Bounded by |
 | --- | --- | --- | --- |
-| App developer or coding agent (honest) | app source | Accidentally build PTBs, read chain objects, or bind an unsanitised URL in an app | `suiBoundary()`, applied in eight consumers (F1); coverage limits in F12; `landing` and `ui` outside it (F13) |
+| App developer or coding agent (honest) | app source | Accidentally build PTBs, read chain objects, or bind an unsanitised URL in an app | `suiBoundary()`, applied in ten consumers (F1, F13); coverage limits in F12 |
 | Coding agent "fixing" a lint error | app source | Rewrite a flagged call into an unflagged form: destructuring, computed access, renamed helper | Code review; consumer audits. The rule is evadable by construction (F12; most variants closed in 0.0.2, F4, F5) |
-| Consumer's ESLint config | config order, options, plugins | Weaken or misapply the boundary through options or order | Documented "append last" and replacement semantics; `files` handling fixed (F2); `extra*` options keep own rules (F3). A removed or `--if-present`-masked `lint:js` drops the boundary (F14) |
+| Consumer's ESLint config | config order, options, plugins | Weaken or misapply the boundary through options or order | Documented "append last" and replacement semantics; `files` handling fixed (F2); `extra*` options keep own rules (F3). A removed `lint:js` now fails consumer CI instead of being skipped (F14) |
 | Dependency authors (dev only) | ESLint, typescript-eslint, eslint-plugin-vue, vue-eslint-parser | Change AST shapes or selector semantics | Fixture tests in CI. Consumers bring their own plugin versions, so a consumer upgrade can silently change matching (S3) |
 | npm registry / publisher | the published tarball | Ship a weakened rule set to every consumer | OIDC provenance on publish (0.0.1 and 0.0.2 carry attestations; the 0.0.0 placeholder has none and is deprecated) |
 
@@ -159,7 +166,7 @@ Critical / High / Medium / Low / Info / Positive.
 
 ## Scope
 
-**In scope (HEAD `0a7ca84`; tag `v0.0.2` = `5e959bf`; tag `v0.0.1` = `336c566`):**
+**In scope (HEAD `504e4c5` = tag `v0.0.3`; tag `v0.0.2` = `5e959bf`; tag `v0.0.1` = `336c566`):**
 
 - `src/index.js`
 - `tests/boundary.test.ts`
@@ -169,7 +176,7 @@ Critical / High / Medium / Low / Info / Positive.
 
 **Cross-repo evidence (read-only, workspace checkouts under `repos/`; first pass 2026-10-03, re-checked 2026-10-09):**
 
-- The eight adopting consumers' `package.json`, `eslint.config.ts`, `node-ci.yml` and `src/` (lint run); `landing` and `ui` configs and the `ui` components.
+- The ten adopting consumers' `package.json`, `eslint.config.ts`, `node-ci.yml` and `src/` (lint run; `landing` and `ui` added 2026-10-18); every consumer's `node-ci.yml` / `npm-publish.yml` (F14).
 - `ui/src/components/{ExplorerLink,AppFooter,CopyrightLine,StatusWidget}.vue`, to test the premise of
   the component exemption.
 
@@ -179,7 +186,7 @@ Critical / High / Medium / Low / Info / Positive.
 - `@meddleware/ui`'s `safeHref` implementation (covered in the ui audit);
 - ESLint and plugin internals.
 
-**Environment / commands (re-run 2026-10-09, Node v24.13.0; first pass 2026-10-03 on Node 22.22.2 in brackets):**
+**Environment / commands (re-run 2026-10-09, Node v24.13.0; first pass 2026-10-03 on Node 22.22.2 in brackets; the 2026-10-18 additions are the last three rows):**
 
 | Command | Result |
 | --- | --- |
@@ -193,6 +200,9 @@ Critical / High / Medium / Low / Info / Positive.
 | Scratch probe (26 cases, test file removed afterwards) | F2, F4, F5, F7 re-probed against `0.0.2`; the forms still passing are listed in F12. |
 | Consumer lint (`npx eslint .` in each adopting consumer) | access-gate-ui, dao-ui, dashboard, seal-ui, token-deployer-ui, treasury-ui, walrus-relay, walrus-ui: **exit 0**, each with `@meddleware/eslint-config` 0.0.2 installed. First pass: scratch sweep of 123 files, 0 messages. |
 | Actions run history | not read (no `gh` access used); the registry's publish timestamps and attestations stand in for it |
+| 2026-10-18: `npm view @meddleware/eslint-config` | `0.0.3` is `latest` (published 2026-10-18 14:48Z, SLSA provenance attestation); `v0.0.3` → `504e4c5` = HEAD; `git status` clean; 35 tests pass at `0.0.3` |
+| 2026-10-18: `grep -l suiBoundary repos/*/eslint.config.ts` | ten files: access-gate-ui, dao-ui, dashboard, landing, seal-ui, token-deployer-ui, treasury-ui, walrus-relay, walrus-ui, ui. `landing` and `ui` depend on `^0.0.3`, the other eight on `^0.0.2`; `npx eslint .` clean in `landing` and `ui` (reported at the fix, F13) |
+| 2026-10-18: `grep -rn "lint:js --if-present" repos/*/.github/workflows` | no output (exit 1): no workflow uses `--if-present` on the lint step (F14) |
 
 The checkout was left unchanged (probe file removed). `git status` shows only `docs/` untracked.
 
@@ -236,8 +246,9 @@ sweep finds none (F11), so the exposure is future drift, not an existing defect.
   token-deployer-ui `6aa9980`, treasury-ui `e92b804`, walrus-relay `112d0d3`, walrus-ui `86a7242`.
 - **Clean under the shipped rules.** `npx eslint .` in each of the eight, with `@meddleware/eslint-config`
   0.0.2 installed (2026-10-09): exit 0.
-- **Not adopted:** `landing` (named in CLAUDE.md) and `ui` (F13). The `--if-present` masking in consumer CI
-  is F14. CLAUDE.md's "take `^0.0.x`" is now true for the eight.
+- **Later adopters (2026-10-18):** `landing` (`45e3d92`) and `ui` (`60e0a9d`) adopted at `^0.0.3` (F13),
+  so CLAUDE.md's "take `^0.0.x`" is true for all ten. The `--if-present` masking in consumer CI was F14
+  (resolved 2026-10-10).
 
 ### F2 — The `files` option crashes ESLint or silently misplaces the template rule
 
@@ -311,6 +322,11 @@ ones in force".
 - Test: "keeps the consumer's own restrictions in force through the extra* options" (and "merges the
   consumer's template restrictions"). No consumer configures its own restriction rules today
   (`grep no-restricted */eslint.config.ts`: none).
+- **OQ2 rationale (2026-10-18):** `extra*` options, no plugin, because that is consistent with the
+  package's invariant "declares no plugins, no runtime dependencies" (CLAUDE.md). A local plugin that
+  owned a dedicated rule would add a trust surface (executable rule code shipped to every consumer's
+  lint run) and a second package to version and release, for no gain over merging the consumer's
+  selectors through options.
 
 ### F4 — The script boundary is name-based and misses common variants and reads
 
@@ -353,6 +369,13 @@ ones in force".
   CLAUDE.md "Allowed on purpose", README). dao-ui and treasury-ui still call
   `getSuiClient().core.getBalance` / `getCurrentSystemState` through their `wallet.ts` shim, which matches
   ADR-0001's "balance through the app's wallet.ts shim" and passes.
+- **OQ1 rationale (2026-10-18):** ADR-0001
+  (`workspace/docs/architecture/ADR-0001-chain-access-layering.md`, the table row for dao-ui and
+  treasury-ui `useTreasury.ts`, line 155) explicitly routes balance reads "through the app's `wallet.ts`
+  shim". Typed, domain-free queries (balance, epoch) are therefore in bounds, while object, event and
+  dynamic-field reads, which need paging, type checks and BCS validation, go through the domain clients.
+  The rule's read list matches the documented architecture; this is a reading of the ADR, not only of
+  the shipped code.
 - **File types.** Default `files` is `src/**/*.{ts,mts,cts,tsx,js,mjs,cjs,jsx,vue}`; plain JS gets the
   core import rule (`splitGlobs`).
 - **Tests.** "refuses a command by any reference, not only a call", "refuses static members of
@@ -411,6 +434,11 @@ rule for VUE-M1 overstate it.
 - **Adjudicated:** helper trust stays by name (a local `safeHref = (u) => u` satisfies the rule) and a
   `javascript:` *literal* is accepted (author-controlled). Both are stated in the source comment, README
   and SECURITY.md.
+- **Trusted helper list (2026-10-18, `0.0.3`):** `URL_HELPERS` = `safeHref`, `safeIcon`, `safePath`,
+  `suiExplorerUrl`, `walruscanBlobUrl` (`src/index.js:13`). `safePath` was added because `@meddleware/ui`
+  validates root-relative links with it; trust is still by name. Test "accepts helper-wrapped bindings,
+  literals and static template strings" (`tests/boundary.test.ts:96`) covers `safePath(url)` and
+  `flag ? safePath(url) : safeHref(url)`.
 
 ### F6 — False positives from method-name-only selectors
 
@@ -498,7 +526,7 @@ wallet shim import the client but still refuses commands, reads and transactions
 
 ### F9 — Documentation drift
 
-**Severity:** Info   **Disposition:** RESOLVED (landing wording: F13)
+**Severity:** Info   **Disposition:** RESOLVED
 
 *As found 2026-10-03:*
 
@@ -514,8 +542,8 @@ wallet shim import the client but still refuses commands, reads and transactions
 semantics, documents `files` / `vueFiles` / `walletFiles` / `extra*`, lists exactly what each rule
 refuses, and has a "What it cannot do" section; CLAUDE.md states the same invariants (replace-not-merge,
 accidents-not-evasion, balance/epoch allowed on purpose); CHANGELOG `[0.0.1]` describes a release that is
-on npm; consumers take `^0.0.2`. One drift remains: CLAUDE.md names `landing` as a consumer, but it does
-not apply the boundary (F13).
+on npm; consumers take `^0.0.2`. The one drift left (CLAUDE.md named `landing` as a consumer that did
+not apply the boundary) was closed 2026-10-18 when `landing` adopted it (F13).
 
 ### F10 — Positive: two-way fixture tests with the consumers' parsers; strict, dependency-free package
 
@@ -541,15 +569,16 @@ not apply the boundary (F13).
 - **Consumer runs.** First pass: a sweep over 123 TS/Vue files in the eight consumers reported **zero**
   violations. 2026-10-09: the real lint step, `npx eslint .` with `@meddleware/eslint-config` 0.0.2
   installed, exits 0 in access-gate-ui, dao-ui, dashboard, seal-ui, token-deployer-ui, treasury-ui,
-  walrus-relay and walrus-ui. The B8 refactor already moved PTBs and object/event reads into the domain
+  walrus-relay and walrus-ui (and, from 2026-10-18, in `landing` and `ui`). The B8 refactor already moved PTBs and object/event reads into the domain
   clients, and every native URL binding goes through `safeHref`, `safeIcon`, `suiExplorerUrl` or
   `walruscanBlobUrl`.
 - **`@meddleware/ui` components.** `ExplorerLink`, `AppFooter` and `StatusWidget` bind `href` through
   `safeHref`. `CopyrightLine` binds through `computedSymbolHref`, built from a local `symbolLink`
   (root-relative paths, else `safeHref`) and fixed `/legal/` paths.
   - The exemption is therefore sound in practice.
-  - It is not machine-checked, because `ui` does not run the template rule, and `computedSymbolHref`
-    would not satisfy it as written (S2, F13).
+  - 2026-10-09: it was not machine-checked, because `ui` did not run the template rule, and
+    `computedSymbolHref` would not satisfy it as written (S2). Resolved 2026-10-18: `ui` now runs the
+    boundary and `CopyrightLine` binds through `safePath` / `safeHref` in the template (F13).
 - **Release chain.** SHA-pinned actions (`checkout@3d3c42e…`, `setup-node@8207627…`); actionlint by
   digest; least privilege (`id-token: write` only on publish); tag = version; idempotent OIDC
   `--provenance` publish; npm client pinned (11.20.0); release gate = CI (F8).
@@ -582,44 +611,68 @@ the control. Revisit if the `strictBoundary()` variant (S4) or a corpus test (S1
 
 ### F13 — `landing` and `ui` do not apply the boundary
 
-**Severity:** Info   **Disposition:** DEFERRED (pre-mainnet gate: "`ui` runs the template rule", Section D)
-**Where:** `landing/eslint.config.ts`, `ui/eslint.config.ts` (no `@meddleware/eslint-config`);
+**Severity:** Info   **Disposition:** RESOLVED (2026-10-18; `landing` `45e3d92`, `ui` `60e0a9d`, eslint-config `0.0.3`)
+**Where (as found 2026-10-09):** `landing/eslint.config.ts`, `ui/eslint.config.ts` (no `@meddleware/eslint-config`);
 `eslint-config/CLAUDE.md` "Release".
 
-**Issue:**
+**Issue (as found 2026-10-09):**
 
-- CLAUDE.md lists `landing` among the consumers that "take `^0.0.x`"; `landing` has no dependency on the
+- CLAUDE.md lists `landing` among the consumers that "take `^0.0.x`"; `landing` had no dependency on the
   package and no `suiBoundary()`. It has no `@mysten/*` import and one native URL binding, in
-  `ToolCard.vue`, through `safeHref`, so no chain boundary is at risk there.
-- `@meddleware/ui` (a component library, exempt by design from the template rule) does not run the
-  template rule on its own components either (S2). Its five `href` bindings are sanitised today
-  (F11).
+  `ToolCard.vue`, through `safeHref`, so no chain boundary was at risk there.
+- `@meddleware/ui` (a component library, exempt by design from the template rule) did not run the
+  template rule on its own components either (S2). Its five `href` bindings were sanitised (F11).
 
-**Impact:** the component exemption in the template rule is relied on but not machine-checked; a future
-unsanitised binding in `ui` or `landing` passes. Low: both are small, and the premise holds today.
+**Impact:** the component exemption in the template rule was relied on but not machine-checked; a future
+unsanitised binding in `ui` or `landing` would pass. Low: both are small, and the premise held.
 
-**Remediation / evidence:** DEFERRED to the pre-mainnet gate in Section D (`ui` applies
-`templateUrlRestrictions([...URL_HELPERS, 'symbolLink'])` or inlines the binding, S2; `landing` either
-adopts `suiBoundary()` or CLAUDE.md drops it from the consumer list). Maintainer decision on which; not
-required for the testnet apps.
+**Remediation / evidence:** RESOLVED 2026-10-18 (eslint-config `0.0.3` released; the `ui` fix ships with
+the next `ui` release).
+
+- **`0.0.3` (`504e4c5`, tag `v0.0.3`, npm 2026-10-18).** `safePath` joined `URL_HELPERS`
+  (`src/index.js:13`), because `@meddleware/ui` validates root-relative links with it. README rule row
+  updated. Test "accepts helper-wrapped bindings, literals and static template strings" (`tests/boundary.test.ts:96`) now covers `safePath(url)` and the ternary
+  `flag ? safePath(url) : safeHref(url)` (35 tests pass). Helper trust stays by name (F5).
+- **`landing` `45e3d92` and `ui` `60e0a9d` (2026-10-18).** Each adds `@meddleware/eslint-config` `^0.0.3`
+  as a devDependency and `...suiBoundary()` last in `eslint.config.ts`. `npx eslint .` is clean in both.
+- **One real violation found and fixed in `ui`.** `CopyrightLine.vue` bound `:href` to a computed ref
+  (`computedSymbolHref`), which the template rule refuses. It now binds through `safePath` / `safeHref`
+  in the template; behaviour is identical; `ui`'s 77 tests pass. Not released separately: the fix ships
+  with the next `ui` release.
+- **Adoption.** `grep -l suiBoundary repos/*/eslint.config.ts` (2026-10-18) lists ten repos:
+  access-gate-ui, dao-ui, dashboard, landing, seal-ui, token-deployer-ui, treasury-ui, walrus-relay,
+  walrus-ui, ui. The component exemption in the template rule for `@meddleware/ui` is now backed by the
+  rule running on its own components (S2 met, with `safePath` rather than a `symbolLink` allowance).
+- **Consumer list.** CLAUDE.md names `landing`; `ui` should be added to it in the next docs touch (the
+  list otherwise matches). No functional gap.
 
 ### F14 — Consumer CI runs `lint:js` with `--if-present`
 
-**Severity:** Low   **Disposition:** DEFERRED (pre-mainnet gate: consumer CI, Section D)
-**Where:** `node-ci.yml` in access-gate-ui (`:39`), dao-ui (`:39`), dashboard (`:42`), seal-ui (`:39`),
-token-deployer-ui (`:39`), treasury-ui (`:39`), walrus-relay (`:35`), walrus-ui (`:39`): `npm run lint:js
---if-present`.
+**Severity:** Low   **Disposition:** RESOLVED (2026-10-10)
+**Where (as found 2026-10-09):** `node-ci.yml` in access-gate-ui (`:39`), dao-ui (`:39`), dashboard (`:42`),
+seal-ui (`:39`), token-deployer-ui (`:39`), treasury-ui (`:39`), walrus-relay (`:35`), walrus-ui (`:39`):
+`npm run lint:js --if-present`.
 
-**Issue:** the boundary is now in force in the eight consumers, but their CI step skips silently if
-`lint:js` is renamed or removed. All eight define `"lint:js": "eslint ."` today, so the step runs. The
-same pattern was F8 here (fixed). Their release workflows run the same CI.
+**Issue (as found 2026-10-09):** the boundary was in force in the eight consumers, but their CI step
+skipped silently if `lint:js` was renamed or removed. All eight defined `"lint:js": "eslint ."`, so the
+step ran. The same pattern was F8 here (fixed). Their release workflows run the same CI.
 
 **Impact:** a future script rename would drop the boundary (and every other ESLint rule) without a CI
 signal.
 
-**Remediation / evidence:** DEFERRED: remove `--if-present` from the lint step in each consumer (a
-one-line change per repo); pre-mainnet gate in Section D. Not
-fixed here because the consumers are separate repositories.
+**Remediation / evidence:** RESOLVED 2026-10-10. Every consumer's `node-ci.yml` / `npm-publish.yml` no
+longer uses `--if-present` where the script exists, so a missing script fails instead of being skipped.
+Commits titled "CI: run the unit tests; a missing script fails instead of being skipped": access-gate-ui
+`38b4d33`, dao-ui `4155034`, dashboard `c69873c`, dev `a49f736`, docs `a998502`, landing `6087acc`,
+nft-gate-client `4cdf244`, seal-ui `6d0aa5d`, status-page `19860cf`, token-deployer-ui `1474c6b`,
+treasury-ui `fd41da4`, walrus-client `b39aa15`, walrus-relay `05f1963`, walrus-ui `cbc61b9`.
+
+- **Verified 2026-10-18:** `grep -rn "lint:js --if-present" repos/*/.github/workflows` returns nothing
+  (exit 1).
+- **Remaining `--if-present` uses** (checked, none masks an existing script): `dashboard`
+  `npm-publish.yml:35` (`test`; dashboard defines no `test` script), `walrus-relay` `npm-publish.yml:40,69`
+  (`build`; no `build` script) and `nft-gate` `npm-publish.yml:40` (`type-check`; the directory has no
+  `package.json`).
 
 ---
 
@@ -634,9 +687,9 @@ fixed here because the consumers are separate repositories.
 | A5 | Native-element URL bindings are literals or helper calls (VUE-M1, URL half) | `templateUrlRestrictions` | fixtures | HOLDS (F5; helper trust by name, F12) |
 | A6 | No `v-html` (VUE-M1, HTML half) | `vue/no-v-html: 'error'` in the template config | fixture | HOLDS (F5) |
 | A7 | Options compose safely with the consumer's config | `suiBoundary`, `vueGlobs`, `splitGlobs`, `extra*` | fixtures ("options" group) | HOLDS (F2, F3) |
-| A8 | Every selector proven in both directions | tests | 35/35 | HOLDS |
+| A8 | Every selector proven in both directions | tests | 35/35 (incl. `safePath`, 2026-10-18) | HOLDS |
 | A9 | No runtime dependencies or plugins declared | `package.json` | inspection | HOLDS |
-| A10 | The boundary is in force in every adopting consumer | consumers' `eslint.config.ts` (`...suiBoundary()` last) | `eslint .` exit 0 in all eight, 2026-10-09 | HOLDS (F1). Not in `landing`, `ui` (F13); CI masking F14 |
+| A10 | The boundary is in force in every consumer | consumers' `eslint.config.ts` (`...suiBoundary()` last) | `grep -l suiBoundary repos/*/eslint.config.ts` lists ten repos; `eslint .` exit 0 in the eight (2026-10-09) and in `landing`, `ui` (2026-10-18); no `lint:js --if-present` in any workflow | HOLDS (F1, F13, F14) |
 | A11 | The tag ships only what CI accepts | `npm-publish.yml` `verify` → `node-ci.yml` | workflow; registry provenance | HOLDS (F8) |
 
 ---
@@ -656,13 +709,13 @@ installs, and fails closed).
 | `eslint-plugin-vue` / `vue-eslint-parser` | dev `^10.11.1` / `^10.4.1` | tests | clean |
 | `typescript` / `vitest` / `@types/node` | dev `~6.0.3` / `~5.0.2` / `~24.12.2` (6.0.3 / 5.0.3 / 24.12.4) | build / tests | clean. TypeScript 7 and Node 25 / `@types/node` 26 were declined in the 2026-10-09 Dependabot triage (Node 24 LTS only; TypeScript 7 deferred) |
 
-First-party range: consumers pin `^0.0.2`, which resolves to exactly 0.0.2 (workspace policy).
+First-party range: consumers pin `^0.0.2` (eight) or `^0.0.3` (`landing`, `ui`), each resolving to exactly that version (workspace policy).
 
 ### B.2 Publish authority & CI
 
 | Authority | Where | Custody | Gates |
 | --- | --- | --- | --- |
-| npm publish `@meddleware/eslint-config` | `npm-publish.yml` (tag `v*`) | OIDC trusted publishing; `--provenance` | releases. `0.0.1` and `0.0.2` published and attested |
+| npm publish `@meddleware/eslint-config` | `npm-publish.yml` (tag `v*`) | OIDC trusted publishing; `--provenance` | releases. `0.0.1`, `0.0.2` and `0.0.3` published and attested |
 | `0.0.0` placeholder | manual publish 2026-10-02 | maintainer | no provenance (expected for a placeholder); deprecated 2026-10-09 |
 
 #### CI & release integrity
@@ -674,7 +727,7 @@ First-party range: consumers pin `^0.0.2`, which resolves to exactly 0.0.2 (work
 | `npm ci` + audit in CI and publish | Yes | `node-ci.yml`, reused by the tag workflow |
 | Publish npm client pinned | Yes | `npm@11.20.0` |
 | Tag ↔ version check | Yes | publish step |
-| OIDC trusted publishing, no long-lived token | Yes | `id-token: write`; registry shows provenance for 0.0.1 and 0.0.2 |
+| OIDC trusted publishing, no long-lived token | Yes | `id-token: write`; registry shows provenance for 0.0.1, 0.0.2 and 0.0.3 |
 | Idempotent publish | Yes | registry 200 check, conflict treated as success |
 | Release gate equals CI | Yes | `verify` calls `node-ci.yml` (`workflow_call`) (F8) |
 | Verify without `--if-present` | Yes | F8 |
@@ -708,7 +761,7 @@ allowlist needed; publish npm client pinned. Holds.
 
 ## Section C — Test-coverage & hermetic/live split
 
-### C.1 Coverage grade — A (35/35 at 2026-10-09; both directions per selector; options, evasion variants and merge cases covered)
+### C.1 Coverage grade — A (35/35 at 2026-10-09 and at `0.0.3`; both directions per selector; options, evasion variants and merge cases covered)
 
 | Dimension | Assessment |
 | --- | --- |
@@ -722,12 +775,12 @@ allowlist needed; publish npm client pinned. Holds.
 | Layer | Files | In CI? |
 | --- | --- | --- |
 | Fixture unit tests | `tests/boundary.test.ts` (35) | yes |
-| Consumer lint (real configs against `src/`) | each consumer's own `lint:js` | yes, in the consumers' CI (with `--if-present`, F14) |
+| Consumer lint (real configs against `src/`) | each consumer's own `lint:js` | yes, in the consumers' CI (a missing script now fails, F14) |
 
 ### C.2 Hermetic vs. live paths
 
 Everything in this package is hermetic: there is no network and no chain. The only "live" dimension is
-consumer adoption (F1, F13, F14) and the consumers' plugin versions (S3).
+consumer adoption (F1, F13, F14; all resolved) and the consumers' plugin versions (S3).
 
 ---
 
@@ -752,8 +805,8 @@ force before consumers claim ADR-0001 / VUE-M1 enforcement.)*
 
 ### pre-mainnet
 
-- [ ] consumer CI runs `lint:js` without `--if-present`, with the boundary present — F14 (consumer repos; mainnet gate)
-- [ ] `ui` runs the template rule on its own components; `landing` adopts or leaves the consumer list — F13, S2 (maintainer decision)
+- [x] consumer CI runs `lint:js` without `--if-present`, with the boundary present — F14 (2026-10-10 commits "CI: run the unit tests; a missing script fails instead of being skipped" in 14 repos; `grep -rn "lint:js --if-present" repos/*/.github/workflows` empty, 2026-10-18)
+- [x] `ui` runs the template rule on its own components; `landing` adopts — F13, S2 (`ui` `60e0a9d`, `landing` `45e3d92`, eslint-config `0.0.3` `504e4c5`, 2026-10-18)
 - [ ] external review — maintainer item (mainnet gate)
 
 ---
@@ -761,32 +814,33 @@ force before consumers claim ADR-0001 / VUE-M1 enforcement.)*
 ## Cross-project themes
 
 - **Consumer audits must not over-credit this package.**
-  - The boundary is now in force in eight consumers (F1), but it stays name-based (F12).
+  - The boundary is now in force in ten consumers (F1, F13), but it stays name-based (F12).
   - Consumer audits should cite this audit's A3–A6 status and the "accidents, not evasion" limit rather
     than "enforced by `@meddleware/eslint-config`".
 - **Direct reads in dao-ui and treasury-ui.** `getBalance` and `getCurrentSystemState` through the app's
   `wallet.ts` `getSuiClient()` pass the rule on purpose (OQ1 decided; allowed list in README, CLAUDE.md
   and CHANGELOG 0.0.2, matching ADR-0001's "balance through the app's wallet.ts shim").
-- **`--if-present` in consumer CI.** All eight consumers run `npm run lint:js --if-present` (F14). The
-  same pattern was F8 here and is fixed here; the consumer repos still carry it.
-- **Component exemption ↔ `@meddleware/ui`.** The template rule trusts components. `ui` should run the
-  template rule itself, with `urlHelpers: ['symbolLink']` or with the binding inlined (S2, F13).
+- **`--if-present` in consumer CI.** Was F14 (and F8 here). Resolved 2026-10-10 in every consumer: a
+  missing script fails CI; none of the remaining `--if-present` uses masks an existing script.
+- **Component exemption ↔ `@meddleware/ui`.** The template rule trusts components, and `ui` now runs the
+  boundary on its own components (`safePath` is a trusted helper since `0.0.3`; S2, F13).
 - **Supply chain & release integrity.** Lockfile committed; actions SHA-pinned; OIDC provenance on every
   published version since 0.0.1; Dependabot grouped weekly; CVE audit clean (0) at 2026-10-09.
 - **Wire-format coupling / on-chain-truth boundary / chain-access layering.** N/A as a producer: the
   package holds no wire format, ID or ABI and decides nothing on chain. It mechanises ADR-0001 for
   consumers; its allowed-list decisions (`utils`, `bcs`, balance and epoch reads) are ADR notes, not
   accounting.
-- **Pre-v0.2 policy:** changes to the emitted config ship as patch releases without shims (0.0.2 did);
-  consumers take them in one bump (`^0.0.2` resolves to exactly 0.0.2).
+- **Pre-v0.2 policy:** changes to the emitted config ship as patch releases without shims (0.0.2 and 0.0.3
+  did); consumers take them in one bump (`^0.0.x` resolves to exactly that version). Eight consumers are
+  still on `^0.0.2`; they lint clean, and `0.0.3` only widens the accepted helpers, so they take it with
+  their next dependency touch.
 
 ---
 
 ## Normative requirements (MUST / MUST NOT)
 
 1. MUST be published with provenance and applied in every consumer before ADR-0001 or VUE-M1
-   enforcement is claimed — **holds** for the eight adopting consumers (F1); `landing` and `ui` are
-   outside it (F13).
+   enforcement is claimed — **holds** for all ten consumers (F1, F13).
 2. MUST NOT crash or silently drop a rule for any documented option value — **holds** (F2).
 3. MUST NOT silently discard a consumer's own restriction rules — **holds** through `extra*`; the
    replacement semantics are documented first in the README (F3).
@@ -795,8 +849,8 @@ force before consumers claim ADR-0001 / VUE-M1 enforcement.)*
    and epoch reads, helper trust by name, residual forms) are documented (F4, F5, F12).
 5. MUST prove every selector in both directions with a fixture — holds (A8, 35/35).
 6. MUST run the same checks on the tag as on `main` before publishing — holds (F8).
-7. MUST keep consumer CI from silently skipping the lint step once the boundary is relied on — **does not
-   hold** (F14, pre-mainnet gate).
+7. MUST keep consumer CI from silently skipping the lint step once the boundary is relied on — holds
+   (F14; no `lint:js --if-present` in any workflow).
 
 **TS lens baseline:**
 
@@ -818,15 +872,16 @@ force before consumers claim ADR-0001 / VUE-M1 enforcement.)*
 | --- | --- | --- |
 | URL sinks | enforced on native elements (helper trust by name) | F5, F12 |
 | HTML (`v-html`) | enforced (`vue/no-v-html`) | F5 |
-| Components (`ui`) | exempt; not machine-checked | F13 |
+| Components (`ui`) | exempt in consumers by design; `ui`'s own components run the rule (`safePath` trusted since `0.0.3`) | F13 |
 
 ## Implementation suggestions (SHOULD / MAY)
 
 - **S1** SHOULD add a corpus test: a fixtures directory of "must refuse" and "must allow" snippets. A
   scheduled job MAY also lint the consumers' `src/` with the unpublished HEAD to catch drift both ways.
   (Partly met: the 35 fixtures cover the F4/F5 cases; no scheduled consumer job.)
-- **S2** SHOULD have `@meddleware/ui` apply `templateUrlRestrictions([...URL_HELPERS, 'symbolLink'])`
-  to its own components, so the component exemption is machine-checked where it is relied on (F13).
+- **S2** SHOULD have `@meddleware/ui` run the template rule on its own components, so the component
+  exemption is machine-checked where it is relied on (F13). Met 2026-10-18: `ui` applies `suiBoundary()`
+  and binds through `safePath` / `safeHref`.
 - **S3** MAY test against both the lowest and the latest supported `typescript-eslint` and
   `eslint-plugin-vue`, since the consumer's versions decide AST shapes.
 - **S4** MAY export a `strictBoundary()` variant with receiver-aware selectors (F12), and keep
@@ -839,11 +894,17 @@ force before consumers claim ADR-0001 / VUE-M1 enforcement.)*
    epoch, and dynamic fields, which dao-ui and treasury-ui read directly today. Or does it cover only
    object and event reads that need paging, type checks and BCS validation? The answer fixes the read
    list. (Decided 2026-10-08: balance and epoch reads are allowed on purpose, dynamic-field reads are
-   refused — CHANGELOG 0.0.2, CLAUDE.md "Allowed on purpose"; see F4.)
+   refused — CHANGELOG 0.0.2, CLAUDE.md "Allowed on purpose"; see F4. **Rationale, 2026-10-18:** decided
+   by best practice and the documented architecture, not only by the shipped code. ADR-0001's
+   `useTreasury.ts` row routes balance reads "through the app's `wallet.ts` shim", so typed, domain-free
+   queries are in bounds, while object, event and dynamic-field reads, which need paging, type checks and
+   BCS validation, go through the domain clients. The rule's read list matches that. Resolved.)
 2. **OQ2** F3: should consumers pass their own restrictions through options that the fragment merges,
    or should the fragment stop owning whole rules (for example by emitting its selectors under a
    dedicated rule via a tiny local plugin)? The latter would add a plugin, against the "no plugins
-   declared" invariant. (Decided 2026-10-08: `extra*` options, no plugin — `0.0.2`; see F3.)
+   declared" invariant. (Decided 2026-10-08: `extra*` options, no plugin — `0.0.2`; see F3. **Rationale,
+   2026-10-18:** consistent with the package's "declares no plugins, no runtime dependencies" invariant;
+   a local plugin would add a trust surface and a second package for no gain. Resolved.)
 3. **OQ3** F1: why did `v0.0.1` not publish? Check the Actions log and the trusted-publisher binding
    before tagging 0.0.2. (Decided 2026-10-09: no further action — `0.0.1` and `0.0.2` are both on npm with
    provenance; the cause of the first failed attempt was not recorded; see F1.)
@@ -856,7 +917,8 @@ force before consumers claim ADR-0001 / VUE-M1 enforcement.)*
   (F12). Review must still look for chain access in app code.
 - **Plugin drift:** consumers bring their own parser and plugin versions; an AST change can make a
   selector silently stop matching (S3).
-- **Masked lint step:** a renamed or removed `lint:js` drops the boundary silently (F14).
+- **Masked lint step:** closed (F14); a renamed or removed `lint:js` now fails consumer CI. Watch for a
+  new consumer copying an older workflow.
 - **Supply chain:** a compromised release would weaken the rules in every consumer's lint run. Controls:
   OIDC provenance and the tag gate; custody of the npm trusted-publisher binding and external review are
   maintainer items.
@@ -893,14 +955,36 @@ force before consumers claim ADR-0001 / VUE-M1 enforcement.)*
     HOLDS, A11 added), Section D (pre-localnet and pre-testnet ticked), B.1/B.2 tables.
   - **Not verified:** the Actions run history (not read; npm timestamps and attestations used instead).
   - **Open for mainnet:** F13, F14, external review.
+- 2026-10-18 — F13 and F14 resolved; `0.0.3` released (HEAD `504e4c5` = `v0.0.3`; npm `0.0.3` latest,
+  provenance).
+  - **Resolved:** F13 (`landing` `45e3d92` and `ui` `60e0a9d` add `@meddleware/eslint-config` `^0.0.3` and
+    `...suiBoundary()` last; `eslint .` clean in both; one real violation found and fixed in `ui`,
+    `CopyrightLine.vue` bound `:href` to a computed ref, now bound through `safePath` / `safeHref`; `ui`'s
+    77 tests pass; the `ui` fix ships with its next release). F14 (resolved 2026-10-10: 14 consumer CI
+    commits, listed in F14; no `lint:js --if-present` remains).
+  - **Changed in `0.0.3`:** `safePath` added to `URL_HELPERS`; README rule row; tests cover `safePath(url)`
+    and `flag ? safePath(url) : safeHref(url)` (35 pass). Helper trust stays by name (F5).
+  - **Decisions recorded with rationale:** OQ1 (ADR-0001 routes balance reads through the app's
+    `wallet.ts` shim, so typed domain-free queries are in bounds and object/event/dynamic-field reads go
+    through the domain clients) and OQ2 (`extra*` options, no plugin: matches the "no plugins, no runtime
+    dependencies" invariant; a plugin adds a trust surface and a second package). Both resolved.
+  - **Verified:** `grep -l suiBoundary repos/*/eslint.config.ts` = ten repos; `grep -rn "lint:js
+    --if-present" repos/*/.github/workflows` = no output; `npm view` shows `0.0.3` latest with
+    provenance.
+  - **Updated:** front matter, deployment status, executive summary, threat model, scope and commands,
+    A8/A10, B tables, C.1 layers, Section D (F13 and F14 ticked), themes, normative 1 and 7, VUE-M1 table,
+    S2, OQ1/OQ2 text, risks.
+  - **Not re-measured:** the other 2026-10-09 measurements (audit 0, pack 6 files 9.1 kB, type-check) were
+    not re-run in this docs pass; the code change is one array entry.
+  - **Open for mainnet:** external review only (maintainer item). Eight consumers still on `^0.0.2`.
 
 ## Pre-save consistency checklist (this pass)
 
-- [x] Section A ↔ findings: A1–A11 HOLDS with F1–F9 RESOLVED; A10 notes F13/F14.
+- [x] Section A ↔ findings: A1–A11 HOLDS with F1–F9, F13, F14 RESOLVED.
 - [x] Finding header ↔ body: dispositions updated; "as found" labels mark the first-pass text.
 - [x] Template line: base + TS with registry dates (2026-10-08); untriggered lenses named; VUE-M1 assessment noted.
 - [x] Closing four-part structure present.
-- [x] Section D ↔ dispositions: unticked items cite F13, F14 and the external review.
+- [x] Section D ↔ dispositions: F13 and F14 ticked with evidence; only the external review is unticked.
 - [x] Executive summary ↔ dispositions and ceiling (Medium; realised Low).
-- [x] C.1 counts measured 2026-10-09 (35 tests).
-- [x] Re-verification log entry added.
+- [x] C.1 counts measured 2026-10-09 and 2026-10-18 (35 tests).
+- [x] Re-verification log entries added (2026-10-09, 2026-10-18).
