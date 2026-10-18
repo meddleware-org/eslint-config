@@ -27,7 +27,7 @@ script rules against the ADR-0001 boundary as stated in consumers' CLAUDE.md fil
 **Deployment status:**
 
 - npm **`0.0.3` is `latest`** (published 2026-10-18 14:48Z, OIDC provenance attestation present); tag
-  `v0.0.3` → `504e4c5` ("safePath is a trusted URL helper; 0.0.3"; HEAD). `0.0.2` (2026-10-08 10:46Z,
+  `v0.0.3` → `504e4c5` ("safePath is a trusted URL helper; 0.0.3"; the last code commit, followed only by an audit commit). `0.0.2` (2026-10-08 10:46Z,
   provenance; tag `v0.0.2` → `5e959bf`) and `0.0.1` (2026-10-08 02:43Z, provenance; tag `v0.0.1` →
   `336c566`) are published too. All three tags are lightweight (unsigned).
 - `0.0.3` adds `safePath` to the trusted URL helpers (`URL_HELPERS`, `src/index.js:13`) because
@@ -37,8 +37,10 @@ script rules against the ADR-0001 boundary as stated in consumers' CLAUDE.md fil
   no shipped file.
 - npm `0.0.0` (the 3-file, 1,338-byte placeholder, no provenance) was **deprecated 2026-10-09**
   (`Placeholder release; use 0.0.1 or later.`).
-- **All ten consumers apply `suiBoundary()`** (F1, F13). Eight adopted at `^0.0.2` on 2026-10-08;
-  `landing` (`45e3d92`) and `ui` (`60e0a9d`) adopted at `^0.0.3` on 2026-10-18.
+- **All ten consumers apply `suiBoundary()`** (F1, F13). Eight adopted at `^0.0.2` on 2026-10-08 (still on
+  `^0.0.2` on 2026-10-18, re-checked in `repos/*/package.json`: access-gate-ui, dao-ui, dashboard, seal-ui,
+  token-deployer-ui, treasury-ui, walrus-relay, walrus-ui; `^0.0.2` resolves 0.0.2 only, so they move when
+  they next bump); `landing` (`45e3d92`) and `ui` (`60e0a9d`) adopted at `^0.0.3` on 2026-10-18.
 
 **Review date:** 2026-10-03; re-verified 2026-10-09 and 2026-10-18
 **Reviewer:** Internal review
@@ -977,6 +979,9 @@ force before consumers claim ADR-0001 / VUE-M1 enforcement.)*
   - **Not re-measured:** the other 2026-10-09 measurements (audit 0, pack 6 files 9.1 kB, type-check) were
     not re-run in this docs pass; the code change is one array entry.
   - **Open for mainnet:** external review only (maintainer item). Eight consumers still on `^0.0.2`.
+- 2026-10-18 (release check) — released (0.0.3), consumers bumped (`landing` and `ui` at `^0.0.3`; the other eight stay on `^0.0.2`).
+  `npm view` shows 0.0.3 as `latest`, published 2026-10-18T14:48Z, with SLSA v1 provenance (`dist.attestations` present);
+  tag `v0.0.3` = `504e4c5`, the last code commit. No box waited only on the release (Section D: only the external review is open).
 
 ## Pre-save consistency checklist (this pass)
 
