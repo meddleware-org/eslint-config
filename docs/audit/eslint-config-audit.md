@@ -37,12 +37,14 @@ script rules against the ADR-0001 boundary as stated in consumers' CLAUDE.md fil
   no shipped file.
 - npm `0.0.0` (the 3-file, 1,338-byte placeholder, no provenance) was **deprecated 2026-10-09**
   (`Placeholder release; use 0.0.1 or later.`).
-- **All ten consumers apply `suiBoundary()`** (F1, F13). Eight adopted at `^0.0.2` on 2026-10-08 (still on
-  `^0.0.2` on 2026-10-18, re-checked in `repos/*/package.json`: access-gate-ui, dao-ui, dashboard, seal-ui,
-  token-deployer-ui, treasury-ui, walrus-relay, walrus-ui; `^0.0.2` resolves 0.0.2 only, so they move when
-  they next bump); `landing` (`45e3d92`) and `ui` (`60e0a9d`) adopted at `^0.0.3` on 2026-10-18.
+- **All ten consumers apply `suiBoundary()`** (F1, F13) **and all ten now depend on `^0.0.3`** (checked 2026-10-19 in the
+  `package.json` of each repo's `main` on GitHub: access-gate-ui, dao-ui, dashboard, landing, seal-ui,
+  token-deployer-ui, treasury-ui, ui, walrus-relay, walrus-ui). Eight adopted at `^0.0.2` on 2026-10-08 and stayed there on
+  2026-10-18 (`^0.0.2` resolves 0.0.2 only); they moved to `^0.0.3` with the Dependabot merges of 2026-10-19 (CI green on each,
+  per the release orchestrator; the lint results were not re-run here). `landing` (`45e3d92`) and `ui` (`60e0a9d`) adopted at
+  `^0.0.3` on 2026-10-18.
 
-**Review date:** 2026-10-03; re-verified 2026-10-09 and 2026-10-18
+**Review date:** 2026-10-03; re-verified 2026-10-09 and 2026-10-18; release status 2026-10-19
 **Reviewer:** Internal review
 **Severity ceiling:** Medium.
 
@@ -57,7 +59,7 @@ script rules against the ADR-0001 boundary as stated in consumers' CLAUDE.md fil
 **Status:** re-verified 2026-10-18. First-pass baseline 2026-10-03 (no predecessor audit); F1–F9 were
 remediated in `0.0.2` and the package is in force in ten consumers. Three findings were added at the
 2026-10-09 re-verification (F12–F14); F13 and F14 were resolved by 2026-10-18 (consumer repos, `0.0.3`).
-Only the external review is open.
+Only the external review is open. Release status re-checked 2026-10-19: no new release; all ten consumers on `^0.0.3`.
 
 **Front matter (TS lens):**
 
@@ -94,7 +96,7 @@ coverage gaps. `0.0.2` (2026-10-08, `5e959bf`) fixed F2–F9; `0.0.1`, `0.0.2` a
 provenance. Eight consumers applied `suiBoundary()` at `^0.0.2` and lint clean (F1). On 2026-10-18
 `0.0.3` added `safePath` to the trusted URL helpers, and `landing` and `ui` adopted the boundary, so ten
 consumers now apply it and lint clean (F13); consumer CI no longer skips the lint step with
-`--if-present` (F14, resolved 2026-10-10). The `0.0.0` placeholder was deprecated on npm 2026-10-09.
+`--if-present` (F14, resolved 2026-10-10). The `0.0.0` placeholder was deprecated on npm 2026-10-09. On 2026-10-19 the eight consumers still on `^0.0.2` moved to `^0.0.3` (Dependabot merges), so all ten are on `^0.0.3`.
 
 **What holds (verified 2026-10-09; consumer adoption and CI re-verified 2026-10-18):**
 
@@ -119,7 +121,7 @@ consumers now apply it and lint clean (F13); consumer CI no longer skips the lin
   SECURITY.md.
 - **Release chain.** SHA-pinned actions, actionlint by digest, `npm audit` in CI and publish, OIDC
   `--provenance`, tag = version, the tag workflow runs the same workflow as CI, Dependabot.
-- **In force.** The ten consumers pass under the default options (eight at `^0.0.2`, `landing` and `ui` at `^0.0.3`).
+- **In force.** The ten consumers pass under the default options (all ten at `^0.0.3` since 2026-10-19; eight were at `^0.0.2` when this was measured on 2026-10-09 and 2026-10-18).
 
 **Findings (14 recorded; none above Low):**
 
@@ -711,7 +713,7 @@ installs, and fails closed).
 | `eslint-plugin-vue` / `vue-eslint-parser` | dev `^10.11.1` / `^10.4.1` | tests | clean |
 | `typescript` / `vitest` / `@types/node` | dev `~6.0.3` / `~5.0.2` / `~24.12.2` (6.0.3 / 5.0.3 / 24.12.4) | build / tests | clean. TypeScript 7 and Node 25 / `@types/node` 26 were declined in the 2026-10-09 Dependabot triage (Node 24 LTS only; TypeScript 7 deferred) |
 
-First-party range: consumers pin `^0.0.2` (eight) or `^0.0.3` (`landing`, `ui`), each resolving to exactly that version (workspace policy).
+First-party range: all ten consumers pin `^0.0.3` (2026-10-19; `^0.0.2` for eight of them until then), each resolving to exactly that version (workspace policy).
 
 ### B.2 Publish authority & CI
 
@@ -833,9 +835,8 @@ force before consumers claim ADR-0001 / VUE-M1 enforcement.)*
   consumers; its allowed-list decisions (`utils`, `bcs`, balance and epoch reads) are ADR notes, not
   accounting.
 - **Pre-v0.2 policy:** changes to the emitted config ship as patch releases without shims (0.0.2 and 0.0.3
-  did); consumers take them in one bump (`^0.0.x` resolves to exactly that version). Eight consumers are
-  still on `^0.0.2`; they lint clean, and `0.0.3` only widens the accepted helpers, so they take it with
-  their next dependency touch.
+  did); consumers take them in one bump (`^0.0.x` resolves to exactly that version). All ten consumers are
+  on `^0.0.3` since 2026-10-19 (the eight that were on `^0.0.2` took it with the Dependabot merges; `0.0.3` only widens the accepted helpers).
 
 ---
 
@@ -979,6 +980,13 @@ force before consumers claim ADR-0001 / VUE-M1 enforcement.)*
   - **Not re-measured:** the other 2026-10-09 measurements (audit 0, pack 6 files 9.1 kB, type-check) were
     not re-run in this docs pass; the code change is one array entry.
   - **Open for mainnet:** external review only (maintainer item). Eight consumers still on `^0.0.2`.
+- 2026-10-19 — release status re-verified: `@meddleware/eslint-config` 0.0.3 is still `latest` on npm (`npm view` 2026-10-19; no newer release), and **all ten
+  consumers now depend on `^0.0.3`** (access-gate-ui, dao-ui, dashboard, landing, seal-ui, token-deployer-ui, treasury-ui, ui, walrus-relay, walrus-ui; read from
+  each repo's `package.json` on GitHub `main`). The eight that stood on `^0.0.2` on 2026-10-18 moved with the merged Dependabot PRs of 2026-10-19.
+  - **Findings and gates:** no change (F13, F14 stay RESOLVED; Section D open only for the external review). The "eight consumers on `^0.0.2`"
+    statements above (Executive summary, adoption, Risks, Section D, the 2026-10-18 log entries) are history as of 2026-10-18.
+  - **Not re-run here:** `npx eslint .` in the eight consumers on 0.0.3 (their CI was green on merge, per the release orchestrator).
+  - Dependabot policy encoded in .github/dependabot.yml (majors declined); open PRs merged 2026-10-19
 - 2026-10-18 (release check) — released (0.0.3), consumers bumped (`landing` and `ui` at `^0.0.3`; the other eight stay on `^0.0.2`).
   `npm view` shows 0.0.3 as `latest`, published 2026-10-18T14:48Z, with SLSA v1 provenance (`dist.attestations` present);
   tag `v0.0.3` = `504e4c5`, the last code commit. No box waited only on the release (Section D: only the external review is open).
