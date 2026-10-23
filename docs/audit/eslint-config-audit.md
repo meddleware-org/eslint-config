@@ -4,7 +4,7 @@
 **Project:** eslint-config (`@meddleware/eslint-config`) — shared ESLint flat-config fragments.
 
 - `suiBoundary()` mechanises the workspace chain-access boundary (ADR-0001, B8) for app `src/`.
-  Apps call the domain clients (access-gate-client, seal-client, walrus-client, sui-token-client)
+  Apps call the domain clients (access-gate-client, sealed-storage-client, walrus-storage-client, token-issuance-client)
   and the wallet-adapter; they never build transactions or read chain objects themselves.
 - A Vue template rule keeps URL bindings on native elements to a literal or a sanitising helper.
   This mechanises the URL half of VUE-M1 for every consumer.
@@ -38,8 +38,8 @@ script rules against the ADR-0001 boundary as stated in consumers' CLAUDE.md fil
 - npm `0.0.0` (the 3-file, 1,338-byte placeholder, no provenance) was **deprecated 2026-10-09**
   (`Placeholder release; use 0.0.1 or later.`).
 - **All ten consumers apply `suiBoundary()`** (F1, F13) **and all ten now depend on `^0.0.3`** (checked 2026-10-19 in the
-  `package.json` of each repo's `main` on GitHub: access-gate-ui, dao-ui, dashboard, landing, seal-ui,
-  token-deployer-ui, treasury-ui, ui, walrus-relay, walrus-ui). Eight adopted at `^0.0.2` on 2026-10-08 and stayed there on
+  `package.json` of each repo's `main` on GitHub: access-gate-ui, dao-ui, dashboard, landing, sealed-storage-ui,
+  token-issuance-ui, treasury-ui, ui, walrus-relay, walrus-storage-ui). Eight adopted at `^0.0.2` on 2026-10-08 and stayed there on
   2026-10-18 (`^0.0.2` resolves 0.0.2 only); they moved to `^0.0.3` with the Dependabot merges of 2026-10-19 (CI green on each,
   per the release orchestrator; the lint results were not re-run here). `landing` (`45e3d92`) and `ui` (`60e0a9d`) adopted at
   `^0.0.3` on 2026-10-18.
@@ -71,7 +71,7 @@ Only the external review is open. Release status re-checked 2026-10-19: no new r
 | Runtime targets | Node, running ESLint |
 | Peer dependencies | `eslint ^10.0.0` (plugins `@typescript-eslint` and `vue` deliberately undeclared; the consumer registers them) |
 | Runtime dependencies | none |
-| Intended consumers (CLAUDE.md) | walrus-ui, walrus-relay, access-gate-ui, seal-ui, dao-ui, treasury-ui, token-deployer-ui, dashboard, landing; also `ui` (adopted 2026-10-18, F13). The first eight apply `suiBoundary()` at `^0.0.2`; `landing` and `ui` at `^0.0.3`. All use `@vue/eslint-config-typescript ^14.9.0`. |
+| Intended consumers (CLAUDE.md) | walrus-storage-ui, walrus-relay, access-gate-ui, sealed-storage-ui, dao-ui, treasury-ui, token-issuance-ui, dashboard, landing; also `ui` (adopted 2026-10-18, F13). The first eight apply `suiBoundary()` at `^0.0.2`; `landing` and `ui` at `^0.0.3`. All use `@vue/eslint-config-typescript ^14.9.0`. |
 
 **Location:** `eslint-config/docs/audit/eslint-config-audit.md`.
 
@@ -202,10 +202,10 @@ Critical / High / Medium / Low / Info / Positive.
 | `npm ls --depth=0` | eslint 10.11.0, typescript-eslint 8.71.0, eslint-plugin-vue 10.11.1, vue-eslint-parser 10.4.1, vitest 5.0.3, typescript 6.0.3, @types/node 24.12.4 |
 | `npm view @meddleware/eslint-config` | versions `0.0.0` (deprecated), `0.0.1`, `0.0.2` (`latest`); `0.0.1` and `0.0.2` carry provenance attestations [`["0.0.0"]`, none] |
 | Scratch probe (26 cases, test file removed afterwards) | F2, F4, F5, F7 re-probed against `0.0.2`; the forms still passing are listed in F12. |
-| Consumer lint (`npx eslint .` in each adopting consumer) | access-gate-ui, dao-ui, dashboard, seal-ui, token-deployer-ui, treasury-ui, walrus-relay, walrus-ui: **exit 0**, each with `@meddleware/eslint-config` 0.0.2 installed. First pass: scratch sweep of 123 files, 0 messages. |
+| Consumer lint (`npx eslint .` in each adopting consumer) | access-gate-ui, dao-ui, dashboard, sealed-storage-ui, token-issuance-ui, treasury-ui, walrus-relay, walrus-storage-ui: **exit 0**, each with `@meddleware/eslint-config` 0.0.2 installed. First pass: scratch sweep of 123 files, 0 messages. |
 | Actions run history | not read (no `gh` access used); the registry's publish timestamps and attestations stand in for it |
 | 2026-10-18: `npm view @meddleware/eslint-config` | `0.0.3` is `latest` (published 2026-10-18 14:48Z, SLSA provenance attestation); `v0.0.3` → `504e4c5` = HEAD; `git status` clean; 35 tests pass at `0.0.3` |
-| 2026-10-18: `grep -l suiBoundary repos/*/eslint.config.ts` | ten files: access-gate-ui, dao-ui, dashboard, landing, seal-ui, token-deployer-ui, treasury-ui, walrus-relay, walrus-ui, ui. `landing` and `ui` depend on `^0.0.3`, the other eight on `^0.0.2`; `npx eslint .` clean in `landing` and `ui` (reported at the fix, F13) |
+| 2026-10-18: `grep -l suiBoundary repos/*/eslint.config.ts` | ten files: access-gate-ui, dao-ui, dashboard, landing, sealed-storage-ui, token-issuance-ui, treasury-ui, walrus-relay, walrus-storage-ui, ui. `landing` and `ui` depend on `^0.0.3`, the other eight on `^0.0.2`; `npx eslint .` clean in `landing` and `ui` (reported at the fix, F13) |
 | 2026-10-18: `grep -rn "lint:js --if-present" repos/*/.github/workflows` | no output (exit 1): no workflow uses `--if-present` on the lint step (F14) |
 
 The checkout was left unchanged (probe file removed). `git status` shows only `docs/` untracked.
@@ -246,8 +246,8 @@ sweep finds none (F11), so the exposure is future drift, not an existing defect.
   later.`).
 - **Adopted in eight consumers**, each with a "Enforce the chain-access boundary (@meddleware/eslint-config
   suiBoundary)" commit of 2026-10-08, `"@meddleware/eslint-config": "^0.0.2"` and `...suiBoundary()` last
-  in `eslint.config.ts`: access-gate-ui `90a0628`, dao-ui `8ec7502`, dashboard `abf78fb`, seal-ui `2cccdb2`,
-  token-deployer-ui `6aa9980`, treasury-ui `e92b804`, walrus-relay `112d0d3`, walrus-ui `86a7242`.
+  in `eslint.config.ts`: access-gate-ui `90a0628`, dao-ui `8ec7502`, dashboard `abf78fb`, sealed-storage-ui `2cccdb2`,
+  token-issuance-ui `6aa9980`, treasury-ui `e92b804`, walrus-relay `112d0d3`, walrus-storage-ui `86a7242`.
 - **Clean under the shipped rules.** `npx eslint .` in each of the eight, with `@meddleware/eslint-config`
   0.0.2 installed (2026-10-09): exit 0.
 - **Later adopters (2026-10-18):** `landing` (`45e3d92`) and `ui` (`60e0a9d`) adopted at `^0.0.3` (F13),
@@ -312,7 +312,7 @@ ones in force".
 
 - Latent: none of the eight consumers configure these rules today.
 - The first consumer that adds a project-specific ban (for example a deprecated helper, or
-  `localStorage` per walrus-client's `browserStorage()` invariant) loses it silently under `src/`.
+  `localStorage` per walrus-storage-client's `browserStorage()` invariant) loses it silently under `src/`.
 
 **Remediation / evidence:** RESOLVED in `0.0.2` (`5e959bf`); decision on OQ2 recorded in the log.
 
@@ -572,8 +572,8 @@ not apply the boundary) was closed 2026-10-18 when `landing` adopted it (F13).
 
 - **Consumer runs.** First pass: a sweep over 123 TS/Vue files in the eight consumers reported **zero**
   violations. 2026-10-09: the real lint step, `npx eslint .` with `@meddleware/eslint-config` 0.0.2
-  installed, exits 0 in access-gate-ui, dao-ui, dashboard, seal-ui, token-deployer-ui, treasury-ui,
-  walrus-relay and walrus-ui (and, from 2026-10-18, in `landing` and `ui`). The B8 refactor already moved PTBs and object/event reads into the domain
+  installed, exits 0 in access-gate-ui, dao-ui, dashboard, sealed-storage-ui, token-issuance-ui, treasury-ui,
+  walrus-relay and walrus-storage-ui (and, from 2026-10-18, in `landing` and `ui`). The B8 refactor already moved PTBs and object/event reads into the domain
   clients, and every native URL binding goes through `safeHref`, `safeIcon`, `suiExplorerUrl` or
   `walruscanBlobUrl`.
 - **`@meddleware/ui` components.** `ExplorerLink`, `AppFooter` and `StatusWidget` bind `href` through
@@ -644,8 +644,8 @@ the next `ui` release).
   in the template; behaviour is identical; `ui`'s 77 tests pass. Not released separately: the fix ships
   with the next `ui` release.
 - **Adoption.** `grep -l suiBoundary repos/*/eslint.config.ts` (2026-10-18) lists ten repos:
-  access-gate-ui, dao-ui, dashboard, landing, seal-ui, token-deployer-ui, treasury-ui, walrus-relay,
-  walrus-ui, ui. The component exemption in the template rule for `@meddleware/ui` is now backed by the
+  access-gate-ui, dao-ui, dashboard, landing, sealed-storage-ui, token-issuance-ui, treasury-ui, walrus-relay,
+  walrus-storage-ui, ui. The component exemption in the template rule for `@meddleware/ui` is now backed by the
   rule running on its own components (S2 met, with `safePath` rather than a `symbolLink` allowance).
 - **Consumer list.** CLAUDE.md names `landing`; `ui` should be added to it in the next docs touch (the
   list otherwise matches). No functional gap.
@@ -654,7 +654,7 @@ the next `ui` release).
 
 **Severity:** Low   **Disposition:** RESOLVED (2026-10-10)
 **Where (as found 2026-10-09):** `node-ci.yml` in access-gate-ui (`:39`), dao-ui (`:39`), dashboard (`:42`),
-seal-ui (`:39`), token-deployer-ui (`:39`), treasury-ui (`:39`), walrus-relay (`:35`), walrus-ui (`:39`):
+sealed-storage-ui (`:39`), token-issuance-ui (`:39`), treasury-ui (`:39`), walrus-relay (`:35`), walrus-storage-ui (`:39`):
 `npm run lint:js --if-present`.
 
 **Issue (as found 2026-10-09):** the boundary was in force in the eight consumers, but their CI step
@@ -668,8 +668,8 @@ signal.
 longer uses `--if-present` where the script exists, so a missing script fails instead of being skipped.
 Commits titled "CI: run the unit tests; a missing script fails instead of being skipped": access-gate-ui
 `38b4d33`, dao-ui `4155034`, dashboard `c69873c`, dev `a49f736`, docs `a998502`, landing `6087acc`,
-nft-gate-client `4cdf244`, seal-ui `6d0aa5d`, status-page `19860cf`, token-deployer-ui `1474c6b`,
-treasury-ui `fd41da4`, walrus-client `b39aa15`, walrus-relay `05f1963`, walrus-ui `cbc61b9`.
+access-gate-gateway-client `4cdf244`, sealed-storage-ui `6d0aa5d`, status-ui `19860cf`, token-issuance-ui `1474c6b`,
+treasury-ui `fd41da4`, walrus-storage-client `b39aa15`, walrus-relay `05f1963`, walrus-storage-ui `cbc61b9`.
 
 - **Verified 2026-10-18:** `grep -rn "lint:js --if-present" repos/*/.github/workflows` returns nothing
   (exit 1).
@@ -981,7 +981,7 @@ force before consumers claim ADR-0001 / VUE-M1 enforcement.)*
     not re-run in this docs pass; the code change is one array entry.
   - **Open for mainnet:** external review only (maintainer item). Eight consumers still on `^0.0.2`.
 - 2026-10-19 — release status re-verified: `@meddleware/eslint-config` 0.0.3 is still `latest` on npm (`npm view` 2026-10-19; no newer release), and **all ten
-  consumers now depend on `^0.0.3`** (access-gate-ui, dao-ui, dashboard, landing, seal-ui, token-deployer-ui, treasury-ui, ui, walrus-relay, walrus-ui; read from
+  consumers now depend on `^0.0.3`** (access-gate-ui, dao-ui, dashboard, landing, sealed-storage-ui, token-issuance-ui, treasury-ui, ui, walrus-relay, walrus-storage-ui; read from
   each repo's `package.json` on GitHub `main`). The eight that stood on `^0.0.2` on 2026-10-18 moved with the merged Dependabot PRs of 2026-10-19.
   - **Findings and gates:** no change (F13, F14 stay RESOLVED; Section D open only for the external review). The "eight consumers on `^0.0.2`"
     statements above (Executive summary, adoption, Risks, Section D, the 2026-10-18 log entries) are history as of 2026-10-18.

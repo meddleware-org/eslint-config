@@ -1,7 +1,7 @@
 // @ts-check
 // @meddleware/eslint-config — flat-config fragments that keep apps on the right side of the chain-access
-// boundary (workspace ADR-0001): apps call domain clients (access-gate-client, seal-client,
-// walrus-client, sui-token-client, the wallet-adapter); they never build transactions or read chain
+// boundary (workspace ADR-0001): apps call domain clients (access-gate-client, sealed-storage-client,
+// walrus-storage-client, token-issuance-client, the wallet-adapter); they never build transactions or read chain
 // objects themselves. Plus a template rule that keeps URL bindings on native elements sanitised.
 //
 // The rules catch accidents and shortcuts, not determined evasion: a name-based selector cannot follow a

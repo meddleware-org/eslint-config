@@ -27,6 +27,6 @@ bindings in Vue templates. Source is `src/index.js` (ESM with JSDoc types; `.d.t
 ## Release
 
 Bump `version`, push, tag `v<version>`; `npm-publish.yml` publishes with npm trusted publishing.
-Consumers (walrus-ui, access-gate-ui, seal-ui, dao-ui, treasury-ui, token-deployer-ui, dashboard, landing)
+Consumers (walrus-storage-ui, access-gate-ui, sealed-storage-ui, dao-ui, treasury-ui, token-issuance-ui, dashboard, landing)
 take `^0.0.x` — an exact pin on 0.0.x — so bump them together. CI and the tag workflow run the same
 `node-ci.yml` (audit, type-check, tests, build, package contents).

@@ -2,7 +2,7 @@
 
 Shared ESLint flat-config fragments for MeddleWare apps. They enforce the chain-access boundary
 (workspace ADR-0001): apps call the domain clients — `@meddleware/access-gate-client`,
-`@meddleware/seal-client`, `@meddleware/walrus-client`, `@meddleware/sui-token-client` — and the
+`@meddleware/sealed-storage-client`, `@meddleware/walrus-storage-client`, `@meddleware/token-issuance-client` — and the
 wallet-adapter; they never build transactions or read chain objects themselves. A template rule keeps
 URL bindings on native elements sanitised.
 
