@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.4] - 2026-10-24
+
+### Changed
+
+- Documentation and comments use the renamed package and service names (workspace naming convention, `docs/architecture/ADR-0003-naming.md`). No code change. `@types/node` ~26.6.5 (development only).
+
 ## [0.0.3] - 2026-10-18
 
 Pre-v0.2: breaking changes are patch releases.
