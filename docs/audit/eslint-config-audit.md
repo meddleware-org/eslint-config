@@ -13,8 +13,8 @@
 declaration build.
 **Template:**
 
-- AUDIT_TEMPLATE.md (2026-10-08)
-- AUDIT_TEMPLATE_TS.md (2026-10-08)
+- AUDIT_TEMPLATE.md (2026-11-01)
+- AUDIT_TEMPLATE_TS.md (2026-11-01)
 
 Not triggered: SUI and SUI_CLIENT (no Move code and no chain access — the package *restricts* chain
 access in others), VUE (not a Vue app or component library; it lints Vue templates, it does not ship
@@ -44,7 +44,7 @@ script rules against the ADR-0001 boundary as stated in consumers' CLAUDE.md fil
   per the release orchestrator; the lint results were not re-run here). `landing` (`45e3d92`) and `ui` (`60e0a9d`) adopted at
   `^0.0.3` on 2026-10-18.
 
-**Review date:** 2026-10-03; re-verified 2026-10-09 and 2026-10-18; release status 2026-10-19
+**Review date:** 2026-10-03; re-verified 2026-10-09 and 2026-10-18; release status 2026-10-19; frontend-wave delta review 2026-11-01 (real review of the 2026-10-19 → 2026-11-01 changes; see the delta section)
 **Reviewer:** Internal review
 **Severity ceiling:** Medium.
 
@@ -143,6 +143,8 @@ consumers now apply it and lint clean (F13); consumer CI no longer skips the lin
 - Open for mainnet: external review only (maintainer item).
 
 ---
+
+**2026-11-01 update.** 0.0.4 changed comments only. During the frontend wave the helper names this rule accepts moved to web-utils and the boundary became a flag of frontend-config's `vueApp`; the review added the missing cross-package test (F15, in ui) and confirmed the single-door consumption (F16).
 
 ## Threat model / trust boundaries
 
@@ -680,6 +682,25 @@ treasury-ui `fd41da4`, walrus-storage-client `b39aa15`, walrus-relay `05f1963`, 
 
 ---
 
+### Frontend wave delta review (2026-11-01) — 0.0.4 reviewed
+
+Scope: everything since the last entry of this audit (2026-10-19): `0.0.4` (2026-10-24: documentation and comments use the renamed package names; `@types/node` ~26.6.5) and the Dependabot group of 2026-10-30. The diff of `src/` is two comment lines (the renamed domain-client names); no rule changed. This repository had no release-tool mark and no entry for 0.0.4 until now. During the frontend wave the package gained two new relationships, reviewed here: `@meddleware/frontend-config` re-exports `suiBoundary()` behind `vueApp({ sui: true })`, and the URL helpers the template rule accepts moved from `@meddleware/ui` to `@meddleware/web-utils`. Ran: `npm ci`; `npm audit --audit-level=high` (exit 0; ten moderate findings, the dev-only `minimatch` chain of the lint toolchain, accepted as in walrus-storage-client F28); `tsc --noEmit`; `vitest` (1 file, 35 tests, two directions per selector with the consumers' parsers); `npm pack --dry-run` (6 files, 31 KiB: `src/index.js`, `dist/index.d.ts`, `CHANGELOG.md`, no tests); the package declares no runtime dependency and no plugin (the invariant `frontend-config` relies on).
+
+### F15 — The helper names the template rule accepts were not checked against the package that now provides them
+**Severity:** Low   **Disposition:** RESOLVED
+**Where:** `src/index.js` (`URL_HELPERS`: `safeHref`, `safeIcon`, `safePath`, `suiExplorerUrl`, `walruscanBlobUrl`); `@meddleware/web-utils` (their home since 2026-10-31).
+**Issue:** the rule accepts a template URL binding only when it calls one of those five names, with no knowledge of where they come from. Before the wave they lived in `@meddleware/ui`; after it, in `@meddleware/web-utils` (ui re-exports them). A rename in either package would leave every app's lint failing — or, worse, the rule accepting a name that no longer exists as a sanitiser. This package has no dependency on web-utils, and web-utils none on this package, so neither side's tests could see the drift.
+**Impact:** the lint boundary that mechanises VUE-M1's URL half for sixteen repos would drift silently.
+**Remediation / evidence:** `@meddleware/ui`, which has both installed, asserts in `src/__tests__/lint-helpers.test.ts` that every name in `URL_HELPERS` is exported by `@meddleware/web-utils` as a function and that the list is the documented five; the same note is in CLAUDE.md of web-utils ("Names are load-bearing"). Test-only change; ships with ui 0.1.38.
+
+### F16 — Positive: the boundary is consumed through one door
+**Severity:** Positive
+**Evidence:** `vueApp({ name, sui })` in `@meddleware/frontend-config` is the only place the boundary is switched on for Vue apps (`sui: true` for the five wallet apps and treasury-ui, off for ui, tokens and sites); it appends `suiBoundary()` last, so a consumer's own restriction rules cannot replace it (F3's merge defect stays fixed — frontend-config's lint test drives this). 35 tests pass.
+
+### Delta notes
+- **A11Y lens:** not triggered (it lints templates for URL safety; it makes no accessibility claim — the template accessibility rules live in `frontend-config`).
+- **Supply chain:** published through the tag-gated trusted-publisher workflow with provenance, Dependabot present; the CI gate is plain `npm audit --audit-level=high` (no accepted advisory, D110).
+
 ## Section A — Invariant verification matrix
 
 | # | Invariant | Enforced at | Proven by | Status |
@@ -990,6 +1011,7 @@ force before consumers claim ADR-0001 / VUE-M1 enforcement.)*
 - 2026-10-18 (release check) — released (0.0.3), consumers bumped (`landing` and `ui` at `^0.0.3`; the other eight stay on `^0.0.2`).
   `npm view` shows 0.0.3 as `latest`, published 2026-10-18T14:48Z, with SLSA v1 provenance (`dist.attestations` present);
   tag `v0.0.3` = `504e4c5`, the last code commit. No box waited only on the release (Section D: only the external review is open).
+- 2026-11-01 — frontend-wave delta review of 0.0.4 (the first entry since 2026-10-19): read the 0.0.4 and wave diffs (comments only), ran the gates (audit, types, 35 tests, pack contents), reviewed the two new relationships (frontend-config's vueApp, web-utils as the helpers' home). Found F15 (nothing checked the helper names against web-utils; now a test in ui) and recorded F16 as Positive. `**Template:**` dates reconciled to the 2026-11-01 registry with no disposition change.
 
 ## Pre-save consistency checklist (this pass)
 
