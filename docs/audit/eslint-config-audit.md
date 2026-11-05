@@ -695,7 +695,7 @@ Scope: everything since the last entry of this audit (2026-10-19): `0.0.4` (2026
 
 ### F16 — Positive: the boundary is consumed through one door
 **Severity:** Positive
-**Evidence:** `vueApp({ name, sui })` in `@meddleware/frontend-config` is the only place the boundary is switched on for Vue apps (`sui: true` for the five wallet apps and treasury-ui, off for ui, tokens and sites); it appends `suiBoundary()` last, so a consumer's own restriction rules cannot replace it (F3's merge defect stays fixed — frontend-config's lint test drives this). 35 tests pass.
+**Evidence:** `vueApp({ name, sui })` in `@meddleware/frontend-config` is the only place the boundary is switched on for Vue apps (`sui: true` in eight repos — access-gate-ui, walrus-storage-ui, sealed-storage-ui, token-issuance-ui, treasury-ui, dashboard-ui, walrus-storage-kit and landing-site, verified from their `eslint.config.ts`; off for `ui`, `wallet-adapter`, status-ui, roadmap-site, content-hub-ui and the VitePress sites, which build no chain data). That closes the `landing-site` half of F13; `ui` still builds no chain data and is judged on its own audit.; it appends `suiBoundary()` last, so a consumer's own restriction rules cannot replace it (F3's merge defect stays fixed — frontend-config's lint test drives this). 35 tests pass.
 
 ### Delta notes
 - **A11Y lens:** not triggered (it lints templates for URL safety; it makes no accessibility claim — the template accessibility rules live in `frontend-config`).
