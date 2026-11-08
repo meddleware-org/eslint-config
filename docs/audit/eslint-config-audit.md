@@ -832,7 +832,7 @@ force before consumers claim ADR-0001 / VUE-M1 enforcement.)*
 
 - [x] consumer CI runs `lint:js` without `--if-present`, with the boundary present — F14 (2026-10-10 commits "CI: run the unit tests; a missing script fails instead of being skipped" in 14 repos; `grep -rn "lint:js --if-present" repos/*/.github/workflows` empty, 2026-10-18)
 - [x] `ui` runs the template rule on its own components; `landing` adopts — F13, S2 (`ui` `60e0a9d`, `landing` `45e3d92`, eslint-config `0.0.3` `504e4c5`, 2026-10-18)
-- [ ] external review — maintainer item (mainnet gate)
+- [ ] external review (ADR-0009 gate G4: not a launch gate; covered by redeploy and the audit pass) — maintainer item (mainnet gate)
 
 ---
 
