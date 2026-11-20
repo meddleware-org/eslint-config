@@ -30,3 +30,7 @@ Bump `version`, push, tag `v<version>`; `npm-publish.yml` publishes with npm tru
 Consumers (walrus-storage-ui, access-gate-ui, sealed-storage-ui, dao-ui, treasury-ui, token-issuance-ui, dashboard, landing)
 take `^0.0.x` — an exact pin on 0.0.x — so bump them together. CI and the tag workflow run the same
 `node-ci.yml` (audit, type-check, tests, build, package contents).
+
+## Interoperability
+
+- [docs/INTEROP.md](docs/INTEROP.md): the standards this project speaks, what is planned, where to extend it, and what proves each claim.
