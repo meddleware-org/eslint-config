@@ -753,9 +753,8 @@ Related sections; `CONTRIBUTING.md` and `AGENTS.md` added; the front matter, dep
 (`grep -l "sui: true" repos/*/eslint.config.*` lists the ten repos on 2026-11-21).
 
 Also recorded, outside this repository: Dependabot **alerts** (security alerts, as distinct from the version updates `.github/dependabot.yml` configures)
-are off in this repository and in 34 others (the repositories created before 2026-10-23, and `accounts`), and on in the 11 created
-between 2026-10-23 and 2026-11-17 (FU-0197). The CI audit gate is unaffected; an alert would only
-have announced the `minimatch` advisory sooner.
+were off here and in 34 other repositories (the ones created before 2026-10-23, and `accounts`) and on in the 11 created between 2026-10-23 and 2026-11-17.
+The maintainer approved enabling them on 2026-11-21 and they are now on in all 46 repositories (FU-0197, done); the CI audit gate was never affected.
 
 ## Section A — Invariant verification matrix
 
@@ -1130,7 +1129,7 @@ force before consumers claim ADR-0001 / VUE-M1 enforcement.)*
   consumer list. Found and fixed **F17** (documentation drift: CLAUDE.md's consumer list, the Node 24 comment in the publish workflow, this audit's
   deployment facts and A10). Verified live: npm `0.0.4` latest with SLSA v1 provenance; Dependabot group #13 open, CI green. Re-run after editing: the
   same commands and actionlint, all passing; the diff proven comment-only (compiled output, parsed YAML and JSONC, `.gitignore` patterns). Recorded
-  outside the repository: FU-0197 (Dependabot alerts off in 35 repositories). Counts: 14 dispositioned findings + 3 Positive (F10, F11, F16):
+  outside the repository: FU-0197 (Dependabot alerts off in 35 repositories; enabled everywhere the same day on the maintainer's approval). Counts: 14 dispositioned findings + 3 Positive (F10, F11, F16):
   13 RESOLVED (F1–F9, F13–F15, F17), 1 ACCEPTED-RISK (F12).
 
 ## Pre-save consistency checklist (this pass)
