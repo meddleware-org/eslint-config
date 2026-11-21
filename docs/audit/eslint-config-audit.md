@@ -15,8 +15,12 @@ declaration build.
 
 - AUDIT_TEMPLATE.md (2026-11-01)
 - AUDIT_TEMPLATE_TS.md (2026-11-01)
+- AUDIT_TEMPLATE_DOCS.md (2026-11-20)
+- AUDIT_TEMPLATE_RFC.md (2026-11-19), partial: formats, identifiers and supply chain
+- AUDIT_TEMPLATE_IOP.md (2026-11-19), partial: public API and versioning
 
-Not triggered: SUI and SUI_CLIENT (no Move code and no chain access — the package *restricts* chain
+Not triggered: PRIV (a lint configuration: it runs only inside a consumer's ESLint, and stores, requests and logs nothing;
+the audit README matrix leaves the cell blank for this reason), SUI and SUI_CLIENT (no Move code and no chain access — the package *restricts* chain
 access in others), VUE (not a Vue app or component library; it lints Vue templates, it does not ship
 any), SEAL, WALRUS, WORKERS, AUTH, PROXY, OPS (no signing scripts), IMG (npm package, no image),
 RUST, GO, SITE, PLATFORM.
@@ -26,6 +30,14 @@ script rules against the ADR-0001 boundary as stated in consumers' CLAUDE.md fil
 
 **Deployment status:**
 
+- **Current (2026-11-21):** npm **`0.0.4` is `latest`** (published 2026-10-24T12:23Z, SLSA v1 provenance; tag `v0.0.4` →
+  `d4e8915`). Seven commits since the tag, none touching `src/`: audits, Dependabot groups (#10, #11), `DO_NOT_TRACK` in CI
+  and the interoperability page. Dependabot group #13 (eslint 10.15, eslint-plugin-vue, typescript-eslint, vue-eslint-parser;
+  development only) is open with CI green. Consumers, all on `^0.0.4`: `@meddleware/frontend-config` (a dependency; its
+  `vueApp({ sui: true })` appends the boundary in ten repos: access-gate-ui, chain-payments-kit, dashboard-ui, landing-site,
+  sealed-storage-ui, token-issuance-ui, treasury-ui, ui, walrus-storage-kit, walrus-storage-ui), `dao-ui` (imports
+  `suiBoundary` directly), and `ui` and `walrus-storage-kit` (also listed as development dependencies). The bullets below are
+  the history to 2026-10-19.
 - npm **`0.0.3` is `latest`** (published 2026-10-18 14:48Z, OIDC provenance attestation present); tag
   `v0.0.3` → `504e4c5` ("safePath is a trusted URL helper; 0.0.3"; the last code commit, followed only by an audit commit). `0.0.2` (2026-10-08 10:46Z,
   provenance; tag `v0.0.2` → `5e959bf`) and `0.0.1` (2026-10-08 02:43Z, provenance; tag `v0.0.1` →
@@ -44,7 +56,7 @@ script rules against the ADR-0001 boundary as stated in consumers' CLAUDE.md fil
   per the release orchestrator; the lint results were not re-run here). `landing` (`45e3d92`) and `ui` (`60e0a9d`) adopted at
   `^0.0.3` on 2026-10-18.
 
-**Review date:** 2026-10-03; re-verified 2026-10-09 and 2026-10-18; release status 2026-10-19; frontend-wave delta review 2026-11-01 (real review of the 2026-10-19 → 2026-11-01 changes; see the delta section)
+**Review date:** 2026-10-03; re-verified 2026-10-09 and 2026-10-18; release status 2026-10-19; frontend-wave delta review 2026-11-01 (real review of the 2026-10-19 → 2026-11-01 changes; see the delta section); Part B documentation pass 2026-11-21 (DOCS, RFC and IOP lenses first applied)
 **Reviewer:** Internal review
 **Severity ceiling:** Medium.
 
@@ -60,6 +72,7 @@ script rules against the ADR-0001 boundary as stated in consumers' CLAUDE.md fil
 remediated in `0.0.2` and the package is in force in ten consumers. Three findings were added at the
 2026-10-09 re-verification (F12–F14); F13 and F14 were resolved by 2026-10-18 (consumer repos, `0.0.3`).
 Only the external review is open. Release status re-checked 2026-10-19: no new release; all ten consumers on `^0.0.3`.
+2026-11-21: documentation pass; F17 (documentation drift) found and resolved; 0.0.4 latest, consumers on `^0.0.4`.
 
 **Front matter (TS lens):**
 
@@ -71,7 +84,19 @@ Only the external review is open. Release status re-checked 2026-10-19: no new r
 | Runtime targets | Node, running ESLint |
 | Peer dependencies | `eslint ^10.0.0` (plugins `@typescript-eslint` and `vue` deliberately undeclared; the consumer registers them) |
 | Runtime dependencies | none |
-| Intended consumers (CLAUDE.md) | walrus-storage-ui, walrus-relay, access-gate-ui, sealed-storage-ui, dao-ui, treasury-ui, token-issuance-ui, dashboard, landing; also `ui` (adopted 2026-10-18, F13). The first eight apply `suiBoundary()` at `^0.0.2`; `landing` and `ui` at `^0.0.3`. All use `@vue/eslint-config-typescript ^14.9.0`. |
+| Intended consumers (CLAUDE.md) | **2026-11-21:** `@meddleware/frontend-config` (dependency; `vueApp({ sui: true })` in ten repos) and `dao-ui` (direct), all on `^0.0.4` (deployment status). **History:** walrus-storage-ui, walrus-relay, access-gate-ui, sealed-storage-ui, dao-ui, treasury-ui, token-issuance-ui, dashboard, landing; also `ui` (adopted 2026-10-18, F13). The first eight apply `suiBoundary()` at `^0.0.2`; `landing` and `ui` at `^0.0.3`. All use `@vue/eslint-config-typescript ^14.9.0`. |
+
+**Front matter (DOCS, RFC and IOP lenses, added 2026-11-21):**
+
+| Field | Value |
+| --- | --- |
+| Documentation status | ledger (workspace `docs/audit/DOCS_LEDGER.tsv`): 17 tracked files before this pass, 19 after (CONTRIBUTING.md and AGENTS.md added): 16 done, 3 excluded (the lockfile, `LICENSE`, the generated `docs/INTEROP.md`), 0 pending, 0 fu (2026-11-21 pass) |
+| Required documents | README, CHANGELOG, SECURITY, CONTRIBUTING (added 2026-11-21), LICENSE (0BSD), CLAUDE.md, AGENTS.md (added 2026-11-21): all present |
+| Doc lints | `check-docs.mjs` (workspace) is the gate. The shared `eslint-plugin-jsdoc` fragment the documentation standard plans for consumers belongs in this package and `frontend-config`; it is added and released in Phase 5, then turned on in consumers |
+| Standards spoken | ESTree / ESLint flat configuration (the `Linter.Config` objects; esquery selectors) — implements — `src/index.js`; ECMAScript modules (ECMA-262) — implements — `src/index.js`; TypeScript declarations — implements — `dist/index.d.ts`; SPDX licence id `0BSD` — `package.json`; Sigstore / SLSA provenance — consumes (npm `--provenance`) — `npm-publish.yml` |
+| Deviations | none |
+| Drafts relied on | none |
+| Data a person can take away | none: the package holds no data about anyone |
 
 **Location:** `eslint-config/docs/audit/eslint-config-audit.md`.
 
@@ -701,6 +726,37 @@ Scope: everything since the last entry of this audit (2026-10-19): `0.0.4` (2026
 - **A11Y lens:** not triggered (it lints templates for URL safety; it makes no accessibility claim — the template accessibility rules live in `frontend-config`).
 - **Supply chain:** published through the tag-gated trusted-publisher workflow with provenance, Dependabot present; the CI gate is plain `npm audit --audit-level=high` (no accepted advisory, D110).
 
+### Part B documentation pass (2026-11-21)
+
+Scope: every tracked file read against the workspace's `docs/operations/DOCUMENTATION_STANDARD.md` and annotated (Part B Phase 1, the second repository);
+the DOCS, RFC and IOP lenses applied for the first time (PRIV is not triggered, see the Template line). Before and after editing: `npm ci`,
+`npm audit --audit-level=high` (exit 0; nine moderate findings, the same development-only `minimatch` advisory GHSA-g3hv-75wg-m249 through eslint and
+typescript-eslint that the 2026-11-01 entry accepted), `npm run type-check`, `npm test` (35 pass), `npm run build`, the package-contents check (6 files)
+and actionlint (1.7.7, the CI image). The diff is comment-only apart from F17's documentation: the JavaScript and TypeScript compile to identical output
+with comments removed, the YAML and JSONC parse to identical values (the publish workflow differs only by two shell comments inside `run:` scripts), and
+`.gitignore` has the same patterns.
+
+### F17 — Documentation drift found by the documentation pass
+**Severity:** Low   **Disposition:** RESOLVED (2026-11-21, unreleased; ships with the Part B batch)
+**Where:** `CLAUDE.md` (Release), `.github/workflows/npm-publish.yml` (the npm upgrade comment), `README.md`, this audit's front matter and A10.
+**Issue:** (1) CLAUDE.md named eight apps as the consumers that "take `^0.0.x`"; since the frontend wave the apps get the boundary through
+`@meddleware/frontend-config` (`vueApp({ sui: true })`) and only `dao-ui` imports it, so a release following CLAUDE.md would bump the wrong repos;
+(2) the publish workflow said "Node 24 ships an older npm" in a job that runs Node 26 (D56), so the reason for pinning npm read as obsolete;
+(3) the README did not say that most apps take the boundary through frontend-config, and had no Development section; CLAUDE.md had no Commands or
+Related section; (4) this audit still gave 0.0.3 as `latest` and a consumer list that includes `walrus-relay`, and F16's list says `ui` is off
+(`ui` and `chain-payments-kit` switch it on today).
+**Impact:** none on the rules. A maintainer releasing from CLAUDE.md, or a reviewer reading this audit, would have been misled about who consumes the
+package and what is deployed.
+**Remediation / evidence:** CLAUDE.md names frontend-config and dao-ui and the release order; the workflow comment says why npm is pinned (OIDC needs
+npm ≥ 11.5.1; one pinned version across the fleet, D12); the README has the frontend-config note and a Development section, CLAUDE.md Commands and
+Related sections; `CONTRIBUTING.md` and `AGENTS.md` added; the front matter, deployment status and A10 are current
+(`grep -l "sui: true" repos/*/eslint.config.*` lists the ten repos on 2026-11-21).
+
+Also recorded, outside this repository: Dependabot **alerts** (security alerts, as distinct from the version updates `.github/dependabot.yml` configures)
+are off in this repository and in 34 others (the repositories created before 2026-10-23, and `accounts`), and on in the 11 created
+between 2026-10-23 and 2026-11-17 (FU-0197). The CI audit gate is unaffected; an alert would only
+have announced the `minimatch` advisory sooner.
+
 ## Section A — Invariant verification matrix
 
 | # | Invariant | Enforced at | Proven by | Status |
@@ -714,7 +770,7 @@ Scope: everything since the last entry of this audit (2026-10-19): `0.0.4` (2026
 | A7 | Options compose safely with the consumer's config | `suiBoundary`, `vueGlobs`, `splitGlobs`, `extra*` | fixtures ("options" group) | HOLDS (F2, F3) |
 | A8 | Every selector proven in both directions | tests | 35/35 (incl. `safePath`, 2026-10-18) | HOLDS |
 | A9 | No runtime dependencies or plugins declared | `package.json` | inspection | HOLDS |
-| A10 | The boundary is in force in every consumer | consumers' `eslint.config.ts` (`...suiBoundary()` last) | `grep -l suiBoundary repos/*/eslint.config.ts` lists ten repos; `eslint .` exit 0 in the eight (2026-10-09) and in `landing`, `ui` (2026-10-18); no `lint:js --if-present` in any workflow | HOLDS (F1, F13, F14) |
+| A10 | The boundary is in force in every consumer | consumers' `eslint.config.ts` (`...suiBoundary()` last; since the frontend wave through frontend-config's `vueApp({ sui: true })`, which appends it last) | **2026-11-21:** `sui: true` in ten repos' `eslint.config.ts` and `suiBoundary` imported directly in `dao-ui`; earlier: `grep -l suiBoundary repos/*/eslint.config.ts` listed ten repos; `eslint .` exit 0 in the eight (2026-10-09) and in `landing`, `ui` (2026-10-18); no `lint:js --if-present` in any workflow | HOLDS (F1, F13, F14) |
 | A11 | The tag ships only what CI accepts | `npm-publish.yml` `verify` → `node-ci.yml` | workflow; registry provenance | HOLDS (F8) |
 
 ---
@@ -781,6 +837,46 @@ No `preinstall`, `install`, `postinstall` or `prepare` scripts; no `overrides`.
 
 Lockfile committed; `npm ci` everywhere; audit at `high` in CI (and so in publish, which calls it), with no
 allowlist needed; publish npm client pinned. Holds.
+
+### B.DOCS-1 Ledger state
+
+19 tracked files: 16 done, 3 excluded (lockfile, licence text, generated `docs/INTEROP.md`), 0 pending, 0 `fu:` rows (2026-11-21, commit recorded in the ledger).
+
+### B.DOCS-2 Commands run
+
+Every command in the README's Development section, CLAUDE.md's Commands section and CONTRIBUTING.md was run on 2026-11-21 and gave what the documents say:
+`npm ci`, `npm run type-check`, `npm test` (35 pass), `npm run build` (`dist/index.d.ts`), `npm pack --dry-run` (6 files). The README's usage example is
+the configuration `dao-ui` runs.
+
+### B.DOCS-3 Generated documentation
+
+`docs/INTEROP.md` is generated by the workspace's `scripts/interop/gen-interop.py` from `config/interop.yaml` and checked there. `dist/index.d.ts` is
+generated from the JSDoc in `src/index.js` (`npm run build`); it is not tracked.
+
+### B.RFC-1 Standards inventory
+
+| Interface | Standard (and version) | Role | Where | Conformance evidence | Deviation |
+| --- | --- | --- | --- | --- | --- |
+| Configuration | ESLint flat configuration (`Linter.Config`, ESLint 10) | implements | `src/index.js` | the fixture tests run every config object through ESLint's own `Linter` | — |
+| Selectors | ESTree and vue-eslint-parser AST node types, esquery selector syntax | implements | `src/index.js` (`scriptRestrictions`, `templateUrlRestrictions`) | each selector refused and allowed in a fixture, with the parsers the apps use | — |
+| Module | ECMAScript modules (ECMA-262) | implements | `src/index.js`, `package.json` `exports` | the tests import it as consumers do | — |
+| Types | TypeScript declaration files | implements | `dist/index.d.ts` | `tsc` build; the type-check of the tests | — |
+| Licence | SPDX identifier `0BSD` | implements | `package.json`, `LICENSE` | registry metadata | — |
+| Provenance | Sigstore / SLSA (npm provenance) | consumes | `npm-publish.yml` | `dist.attestations` on npm, SLSA v1 (checked 2026-11-21) | — |
+
+### B.IOP-1 Export and exit drill
+
+Not applicable: the package holds no data about anyone. A consumer leaves by copying `src/index.js` (0BSD) or by dropping the fragment from its config.
+
+### B.IOP-2 Exit register entries
+
+npm (publication only) and GitHub Actions (CI). No run-time dependency; `eslint` is the consumer's.
+
+### B.IOP-3 API stability
+
+The public API is `suiBoundary(options)` and the exported building blocks listed in the README. Versioning is patch-only until mainnet (workspace
+policy), so a consumer's `^0.0.x` is an exact pin and nothing changes under it; changes are announced in `CHANGELOG.md`. The README states what the
+rules cannot do, so nothing relies on them as more than a guard rail.
 
 ---
 
@@ -898,6 +994,20 @@ force before consumers claim ADR-0001 / VUE-M1 enforcement.)*
 | HTML (`v-html`) | enforced (`vue/no-v-html`) | F5 |
 | Components (`ui`) | exempt in consumers by design; `ui`'s own components run the rule (`safePath` trusted since `0.0.3`) | F13 |
 
+**Lens baselines (DOCS, RFC, IOP), first recorded 2026-11-21:**
+
+| ID | Holds? | Evidence |
+| --- | --- | --- |
+| DOCS-M1 | yes (all seven documents; 0BSD; CHANGELOG per release with an Unreleased section) | B.DOCS-1 |
+| DOCS-M2 | yes (every file's header and every declaration documented; ledger rows done) | `check-docs.mjs --report eslint-config` |
+| DOCS-M3 | yes (no environment variables; the options and exports are in the README and the JSDoc) | README Options, `src/index.js` |
+| DOCS-M4 | yes (commands run, links resolve, ids exist) | B.DOCS-2 |
+| DOCS-M5 | yes (no TODO, FIXME, XXX or HACK) | `check-docs.mjs` |
+| DOCS-M6 | yes (CLAUDE.md verified against the code and the consumers in this pass, F17; AGENTS.md points to it) | this pass |
+| DOCS-M7 | yes (no secrets or private data; the comments run in ESLint, nothing reaches a browser) | inspection |
+| RFC-M1 to RFC-M7 | yes where they apply (B.RFC-1; no format of its own; M5 is the hosts', not a package's) | B.RFC-1 |
+| IOP-M3 | yes (B.IOP-3); IOP-M1, M2, M4 to M7: not applicable (no data, no service) | B.IOP-1 to 3 |
+
 ## Implementation suggestions (SHOULD / MAY)
 
 - **S1** SHOULD add a corpus test: a fixtures directory of "must refuse" and "must allow" snippets. A
@@ -1013,7 +1123,20 @@ force before consumers claim ADR-0001 / VUE-M1 enforcement.)*
   tag `v0.0.3` = `504e4c5`, the last code commit. No box waited only on the release (Section D: only the external review is open).
 - 2026-11-01 — frontend-wave delta review of 0.0.4 (the first entry since 2026-10-19): read the 0.0.4 and wave diffs (comments only), ran the gates (audit, types, 35 tests, pack contents), reviewed the two new relationships (frontend-config's vueApp, web-utils as the helpers' home). Found F15 (nothing checked the helper names against web-utils; now a test in ui) and recorded F16 as Positive. `**Template:**` dates reconciled to the 2026-11-01 registry with no disposition change.
 
+- 2026-11-21 — Part B documentation pass and first application of the DOCS, RFC and IOP lenses (above, "Part B documentation pass"; PRIV not
+  triggered). Baseline before editing: `npm ci`, audit (exit 0, nine moderate, development only), type-check, 35 tests, build, package contents. Every
+  tracked file annotated to the documentation standard (headers, TSDoc on every declaration including the private constants, comments on why);
+  `CONTRIBUTING.md` and `AGENTS.md` added; README frontend-config note and Development section; CLAUDE.md Commands and Related sections and a current
+  consumer list. Found and fixed **F17** (documentation drift: CLAUDE.md's consumer list, the Node 24 comment in the publish workflow, this audit's
+  deployment facts and A10). Verified live: npm `0.0.4` latest with SLSA v1 provenance; Dependabot group #13 open, CI green. Re-run after editing: the
+  same commands and actionlint, all passing; the diff proven comment-only (compiled output, parsed YAML and JSONC, `.gitignore` patterns). Recorded
+  outside the repository: FU-0197 (Dependabot alerts off in 35 repositories). Counts: 14 dispositioned findings + 3 Positive (F10, F11, F16):
+  13 RESOLVED (F1–F9, F13–F15, F17), 1 ACCEPTED-RISK (F12).
+
 ## Pre-save consistency checklist (this pass)
+
+- [x] 2026-11-21: Template line cites DOCS, RFC and IOP with their registry dates and names PRIV as not triggered; their front-matter fields, Section B
+  subsections and MUST rows added; F17 recorded in the findings and the log; the deployment status, consumers and A10 current.
 
 - [x] Section A ↔ findings: A1–A11 HOLDS with F1–F9, F13, F14 RESOLVED.
 - [x] Finding header ↔ body: dispositions updated; "as found" labels mark the first-pass text.

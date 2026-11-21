@@ -1,3 +1,6 @@
+# Node CI: lint the workflows, install, audit, type-check, test, build the type declarations, and check what the npm tarball
+# would contain. It runs on every push to main and every pull request, and the release workflow (npm-publish.yml) calls it on
+# the tagged commit so a tag that fails these checks never publishes.
 name: Node CI
 
 on:
@@ -7,9 +10,11 @@ on:
   # The release workflow runs the same checks on the tagged commit.
   workflow_call:
 
+# Read-only: CI needs nothing but the checkout.
 permissions:
   contents: read
 
+# No tool may phone home from CI (the fleet's privacy rule; npm, Node and other tools honour it).
 env:
   DO_NOT_TRACK: "1"
 
@@ -18,30 +23,41 @@ jobs:
     name: Type-check & test
     runs-on: ubuntu-latest
     steps:
+      # Actions are pinned by full commit SHA with the version in a comment (D12).
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      # Node 26 is the fleet baseline (D56).
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '26'
 
+      # Workflow syntax and expression check, from a digest-pinned image so the linter itself cannot change underneath us.
       - name: actionlint
         run: docker run --rm -v "$PWD:/repo" -w /repo docker.io/rhysd/actionlint:1.7.7@sha256:887a259a5a534f3c4f36cb02dca341673c6089431057242cdc931e9f133147e9 -color
 
+      # `npm ci` installs exactly the lockfile, so CI tests what was reviewed.
       - name: Install dependencies
         run: npm ci
 
+      # High and critical advisories fail the build. There is no allow-list here: the package has development
+      # dependencies only, so an advisory is fixed by an update rather than accepted.
       - name: Audit dependencies
         run: npm audit --audit-level=high
 
+      # `checkJs` type-checks src/index.js through its JSDoc types, and the tests.
       - name: Type-check
         run: npm run type-check
 
+      # The fixture tests: every selector, in both directions (CLAUDE.md, "Every selector is proven by a fixture test").
       - name: Test
         run: npm test
 
+      # Emits dist/index.d.ts, the types consumers import.
       - name: Build
         run: npm run build
 
+      # The tarball must hold the source, the declarations and the manifest, and nothing else: a stray file would publish
+      # whatever it contains. npm always adds LICENSE and README.md, and `files` lists CHANGELOG.md, so those three are allowed.
       - name: Package contents
         run: |
           npm pack --dry-run --json > pack.json

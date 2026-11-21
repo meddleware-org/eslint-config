@@ -1,3 +1,9 @@
+/**
+ * Fixture tests for the boundary: each selector is run through ESLint's own `Linter`, with the parsers and plugins the apps
+ * register, in both directions (a violation is reported, the allowed form is not). CLAUDE.md requires both cases for every
+ * new selector. Groups: imports, chain calls, template URL bindings, the variants a name-only selector would miss, options,
+ * and the template sinks found after the first version.
+ */
 import { describe, it, expect } from 'vitest'
 import { Linter } from 'eslint'
 import tseslint from 'typescript-eslint'
@@ -5,7 +11,9 @@ import pluginVue from 'eslint-plugin-vue'
 import vueParser from 'vue-eslint-parser'
 import { splitGlobs, suiBoundary, vueGlobs } from '../src/index.js'
 
+/** A virtual working directory: the Linter only needs file names relative to it for the globs to match. */
 const CWD = '/repo'
+/** The consumer's own setup, which the package expects and does not provide: the TypeScript parser and plugin, and Vue's. */
 const base: Linter.Config[] = [
   {
     files: ['**/*.ts'],
@@ -22,6 +30,14 @@ const base: Linter.Config[] = [
   },
 ]
 
+/**
+ * Lint `code` as if it were `file` in a consumer repo with the boundary appended.
+ * @param code - the source text
+ * @param file - the path relative to the repo root, which decides which config objects apply
+ * @param extra - options passed to `suiBoundary`
+ * @returns the rule id of every message, in order (`parse` for a message without one)
+ * @throws when the code does not parse, so a broken fixture cannot pass as "no violations"
+ */
 function lint(code: string, file: string, extra: Parameters<typeof suiBoundary>[0] = {}): string[] {
   const linter = new Linter({ cwd: CWD })
   const messages = linter.verify(code, [...base, ...suiBoundary(extra)], { filename: `${CWD}/${file}` })
@@ -30,6 +46,7 @@ function lint(code: string, file: string, extra: Parameters<typeof suiBoundary>[
   return messages.map((m) => m.ruleId ?? 'parse')
 }
 
+// Static imports: types may cross the boundary, values may not.
 describe('imports', () => {
   it('allows type-only imports of the restricted paths', () => {
     expect(lint(`import type { Transaction } from '@mysten/sui/transactions'\nexport type T = Transaction`, 'src/a.ts')).toEqual([])
@@ -41,6 +58,7 @@ describe('imports', () => {
     expect(lint(`import { SuiGrpcClient, type ClientWithCoreApi } from '@mysten/sui/grpc'\nexport const c = SuiGrpcClient`, 'src/a.ts')).toContain('@typescript-eslint/no-restricted-imports')
   })
 
+  // Public fullnodes dropped JSON-RPC, so even its types would only lead someone to a client that cannot work.
   it('refuses JSON-RPC even as a type import', () => {
     expect(lint(`import type { SuiJsonRpcClient } from '@mysten/sui/jsonRpc'\nexport type J = SuiJsonRpcClient`, 'src/a.ts')).toContain('@typescript-eslint/no-restricted-imports')
   })
@@ -50,6 +68,7 @@ describe('imports', () => {
   })
 })
 
+// Building transactions and reading chain objects, in app code and in the wallet shim.
 describe('chain calls', () => {
   it('refuses building transactions and reading objects in app code', () => {
     expect(lint(`declare const Transaction: any\nexport const t = new Transaction()`, 'src/a.ts')).toContain('no-restricted-syntax')
@@ -62,6 +81,7 @@ describe('chain calls', () => {
     expect(lint(`declare const client: any\nexport const r = client.fetchGate('0x1')\nexport const d = new Date()`, 'src/a.ts')).toEqual([])
   })
 
+  // Tests and scripts may build transactions: they exercise the clients, they are not app code.
   it('exempts tests and files outside src', () => {
     const code = `declare const Transaction: any\nexport const t = new Transaction()`
     expect(lint(code, 'src/a.test.ts')).toEqual([])
@@ -84,9 +104,11 @@ describe('chain calls', () => {
   })
 })
 
+// Bound URLs on native elements must pass through a trusted helper; components sanitise their own props.
 describe('template URL bindings', () => {
   const sfc = (tpl: string) => `<script setup lang="ts">\ndeclare const url: string, flag: boolean\ndeclare function safeHref(u: string): string | undefined\ndeclare function safePath(u: string): string | undefined\ndeclare function toUrl(u: string): string\n</script>\n<template>${tpl}</template>`
 
+  // `toUrl` is not a trusted helper, so wrapping a value in it does not make the binding safe.
   it('refuses an unsanitised binding on a native element', () => {
     for (const tpl of ['<a :href="url">x</a>', '<img :src="url">', '<img v-bind:src="url">', '<form :action="url"></form>', '<img :src="toUrl(url)">']) {
       expect(lint(sfc(tpl), 'src/A.vue')).toContain('vue/no-restricted-syntax')
@@ -109,6 +131,7 @@ describe('template URL bindings', () => {
 })
 
 describe('script boundary: variants a name-only selector would miss', () => {
+  // Each fixture declares the names it uses, so the TypeScript parser never fails on an unknown identifier.
   const refused = (code: string, file = 'src/a.ts') => expect(lint(`declare const tx: any, client: any, Transaction: any, bytes: any\n${code}`, file), code).toContain('no-restricted-syntax')
   const allowed = (code: string, file = 'src/a.ts') => expect(lint(`declare const tx: any, client: any, bus: any\n${code}`, file), code).toEqual([])
 
@@ -124,12 +147,14 @@ describe('script boundary: variants a name-only selector would miss', () => {
     refused("export const r = client['getObject']({})")
   })
 
+  // Regression cases: each name here once passed the rule.
   it('refuses the reads and execution the first version missed', () => {
     for (const call of ['listCoins', 'listDynamicFields', 'getDynamicField', 'getTransaction', 'simulateTransaction', 'executeTransaction']) {
       refused(`export const r = client.core.${call}({})`)
     }
   })
 
+  // The deliberate exceptions (ADR-0001 note); `bus.send` checks that a generic name is not refused by accident.
   it('allows the typed balance and epoch reads, and unrelated calls that share a generic name', () => {
     allowed('export const a = client.core.getBalance({ owner: "0x1" })')
     allowed('export const b = client.core.listBalances({ owner: "0x1" })')
@@ -176,6 +201,7 @@ describe('script boundary: variants a name-only selector would miss', () => {
   })
 })
 
+// The options that keep a consumer's own restrictions in force and move the boundary to other folders.
 describe('options', () => {
   it('keeps the consumer\'s own restrictions in force through the extra* options', () => {
     const code = `declare const o: object\nfor (const k in o) { void k }\nimport lodash from 'lodash'\nexport const l = lodash`
@@ -212,6 +238,7 @@ describe('options', () => {
 })
 
 describe('template sinks the first version missed', () => {
+  // A component with the names the templates bind, so each case is only the template under test.
   const sfc = (tpl: string) => `<script setup lang="ts">\ndeclare const url: string, attr: string, flag: boolean, obj: Record<string, string>\ndeclare function safeHref(u: string): string | undefined\n</script>\n<template>${tpl}</template>`
   const refused = (tpl: string) => expect(lint(sfc(tpl), 'src/A.vue'), tpl).toContain('vue/no-restricted-syntax')
   const allowed = (tpl: string) => expect(lint(sfc(tpl), 'src/A.vue'), tpl).toEqual([])
@@ -231,6 +258,7 @@ describe('template sinks the first version missed', () => {
     refused('<a :[attr]="url">x</a>')
   })
 
+  // Vue resolves `<IMG>` as a component name, but the browser builds an `img`: it must be checked as native.
   it('refuses an upper-case native tag, which the DOM builds as the native element', () => {
     refused('<IMG :src="url">')
     refused('<A :href="url">x</A>')
@@ -253,6 +281,7 @@ describe('template sinks the first version missed', () => {
     allowed('<a v-bind:title="url" :class="{ x: flag }">x</a>')
   })
 
+  // `$` is legal in an identifier and special in a regular expression.
   it('escapes a helper name that contains a regular-expression character', () => {
     const tpl = '<img :src="toUrl$(url)">'
     expect(lint(`<script setup lang="ts">\ndeclare const url: string, flag: boolean\ndeclare function toUrl$(u: string): string\n</script>\n<template>${tpl}</template>`, 'src/A.vue', { urlHelpers: ['toUrl$'] })).toEqual([])

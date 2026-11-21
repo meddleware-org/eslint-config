@@ -21,6 +21,9 @@ export default defineConfigWithVueTs(
 Append it **last**. It relies on the `@typescript-eslint` and `vue` plugins the repo already registers
 (e.g. via `@vue/eslint-config-typescript` and `eslint-plugin-vue`).
 
+Most Meddleware apps do not import it themselves: `@meddleware/frontend-config/eslint` builds the fleet's whole config,
+and `vueApp({ name, sui: true })` appends this boundary last for you.
+
 **It replaces your own restriction rules.** ESLint does not merge rule options across config objects: for the
 files the boundary covers, its `no-restricted-syntax`, `vue/no-restricted-syntax` and
 `@typescript-eslint/no-restricted-imports` options replace yours, silently. Pass your own restrictions
@@ -71,6 +74,22 @@ The building blocks are exported too: `restrictedImportOptions`, `scriptRestrict
 
 Use `eslint --report-unused-disable-directives` and require a reason on every `eslint-disable` of these
 rules: a disable also hides a real hit.
+
+## Development
+
+There is no bundling step: the package ships `src/index.js` as it is, plus the type declarations built from its JSDoc.
+The checks, all run in CI on every push:
+
+```bash
+npm ci               # install exactly the lockfile
+npm run type-check   # tsc --noEmit: src/index.js against its JSDoc types (checkJs), and the tests
+npm test             # the fixture tests: every selector, refused and allowed
+npm run build        # dist/index.d.ts
+npm pack --dry-run   # what the tarball would contain
+```
+
+A new selector needs both a refused and an allowed fixture in `tests/boundary.test.ts`. The rules for changing the
+boundary are in [`CLAUDE.md`](CLAUDE.md); how to propose a change is in [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## License
 

@@ -8,6 +8,10 @@
 // value through an arbitrary re-export or helper. Consumers already register the `@typescript-eslint` and
 // `vue` plugins (e.g. through `@vue/eslint-config-typescript` and `eslint-plugin-vue`); this package
 // declares no plugins and has no runtime dependencies.
+//
+// Main export: `suiBoundary(options)`, the flat-config objects a consumer appends last. Its building blocks are exported
+// too (the option and selector lists, `templateUrlRestrictions`, `splitGlobs`, `vueGlobs`). Most apps take it through
+// `@meddleware/frontend-config/eslint` (`vueApp({ sui: true })`). Tests: tests/boundary.test.ts.
 
 /** Helpers whose return value is a safe URL (or undefined) for a native element binding. */
 export const URL_HELPERS = Object.freeze(['safeHref', 'safeIcon', 'safePath', 'suiExplorerUrl', 'walruscanBlobUrl'])
@@ -28,12 +32,25 @@ const NATIVE_TAGS = [
   'a', 'area', 'audio', 'base', 'button', 'embed', 'form', 'frame', 'iframe', 'image', 'img', 'input', 'link',
   'meta', 'object', 'script', 'source', 'svg', 'track', 'use', 'video',
 ]
+/**
+ * Selector for a native element: any lower-case tag (Vue treats it as HTML) or a known native tag in any case. A capitalised
+ * or hyphenated name is a component, which sanitises its own props.
+ */
 const NATIVE = `:matches(VElement[rawName=/^[a-z][a-z0-9]*$/], VElement[rawName=/^(${NATIVE_TAGS.join('|')})$/i])`
 
+/** The allowed subpaths as a regular-expression alternation. */
 const allowedSui = ALLOWED_SUI_SUBPATHS.join('|')
+/**
+ * Selector-attribute regex for an import source that is chain access: an `@mysten/sui/` subpath other than the allowed ones.
+ * Used by the `import()` and `require()` entries, which the import rules do not see.
+ */
 const SUI_RESTRICTED_SOURCE = `/^@mysten\\/sui\\/(?!(${allowedSui})$)/`
 
-/** @param {string} name */
+/**
+ * The message for a refused import, naming the path pattern it matched.
+ * @param {string} name - the restricted path or pattern
+ * @returns {string} the message shown by ESLint
+ */
 const restrictedImportMessage = (name) =>
   `No chain access in app code: use the domain client or the wallet-adapter (type-only imports of ${name} are fine).`
 
@@ -42,6 +59,7 @@ const restrictedImportMessage = (name) =>
  * (type-only imports stay allowed); JSON-RPC never.
  */
 export const restrictedImportOptions = Object.freeze({
+  // Frozen throughout so a consumer cannot change the boundary for every other config object by mutating the export.
   paths: Object.freeze([
     Object.freeze({
       name: '@mysten/sui/jsonRpc',
@@ -59,37 +77,52 @@ export const restrictedImportOptions = Object.freeze({
   ]),
 })
 
-// Method names that are specific to building Sui transactions: ANY reference is refused (a call, `.bind`,
-// destructuring, computed access).
+/**
+ * Method names that are specific to building Sui transactions: ANY reference is refused (a call, `.bind`,
+ * destructuring, computed access).
+ */
 const COMMANDS = ['moveCall', 'splitCoins', 'mergeCoins', 'transferObjects', 'makeMoveVec']
-// Generic names, refused only as calls (they are common outside Sui: `bus.publish(...)`).
+/** Generic names, refused only as calls (they are common outside Sui: `bus.publish(...)`). */
 const GENERIC_COMMANDS = ['publish', 'upgrade']
-// Chain reads, refused as calls. Balance and epoch reads (`getBalance`, `listBalances`,
-// `getCurrentSystemState`) are deliberately allowed: they are typed, domain-free queries (ADR-0001 note).
+/**
+ * Chain reads, refused as calls. Balance and epoch reads (`getBalance`, `listBalances`,
+ * `getCurrentSystemState`) are deliberately allowed: they are typed, domain-free queries (ADR-0001 note).
+ */
 const READS = [
   'getObject', 'getObjects', 'listOwnedObjects', 'getOwnedObjects', 'listEvents', 'queryEvents', 'listCoins',
   'listDynamicFields', 'getDynamicField', 'getTransaction', 'simulateTransaction', 'executeTransaction',
 ]
-/** @param {string[]} names */
+/**
+ * Names as a regular-expression alternation, for a selector attribute.
+ * @param {string[]} names - plain identifiers (no regular-expression characters)
+ * @returns {string} `a|b|c`
+ */
 const anyOf = (names) => names.join('|')
 
+/** The message for a refused dynamic import or `require()`. */
 const IMPORT_MESSAGE = 'No chain access in app code: use the domain client or the wallet-adapter.'
 
 /** `no-restricted-syntax` entries about importing (dynamic `import()` / `require`) the restricted paths. */
 const importSyntax = [
+  // A literal source: `import('@mysten/sui/grpc')`.
   { selector: `ImportExpression[source.value=${SUI_RESTRICTED_SOURCE}]`, message: IMPORT_MESSAGE },
+  // A template or a concatenation cannot be resolved statically, so any one that starts with the scope is refused.
   { selector: "ImportExpression[source.type='TemplateLiteral'][source.quasis.0.value.raw=/@mysten\\//]", message: IMPORT_MESSAGE },
   { selector: "ImportExpression[source.type='BinaryExpression'][source.left.value=/@mysten\\//]", message: IMPORT_MESSAGE },
+  // CommonJS `require()` of a restricted path, for the plain JavaScript files.
   { selector: `CallExpression[callee.name='require'][arguments.0.value=${SUI_RESTRICTED_SOURCE}]`, message: IMPORT_MESSAGE },
 ]
 
 /** `no-restricted-syntax` entries about building transactions and reading chain objects. */
 const chainSyntax = [
+  // The transaction builder itself, by construction or through its statics.
   { selector: "NewExpression[callee.name='Transaction']", message: 'Build transactions in the domain client, not in app code.' },
   { selector: "MemberExpression[object.name='Transaction']", message: 'Build transactions in the domain client, not in app code (`Transaction.from` and the other statics included).' },
+  // Commands by any reference: a member, a computed name, or destructuring.
   { selector: `MemberExpression[property.name=/^(${anyOf(COMMANDS)})$/]`, message: 'Transaction commands belong in the domain client (extend it instead).' },
   { selector: `MemberExpression[computed=true][property.value=/^(${anyOf([...COMMANDS, ...GENERIC_COMMANDS, ...READS])})$/]`, message: 'Chain access by computed property name is refused too: use the domain client.' },
   { selector: `ObjectPattern > Property[key.name=/^(${anyOf(COMMANDS)})$/]`, message: 'Transaction commands belong in the domain client (destructuring them does not change that).' },
+  // Generic command names and reads, as calls only.
   { selector: `CallExpression[callee.property.name=/^(${anyOf(GENERIC_COMMANDS)})$/]`, message: 'Transaction commands belong in the domain client (extend it instead).' },
   { selector: `CallExpression[callee.property.name=/^(${anyOf(READS)})$/]`, message: 'Chain reads belong in the domain client (it pages, type-checks and validates).' },
 ]
@@ -102,9 +135,11 @@ export const walletRestrictions = Object.freeze(chainSyntax.map((r) => Object.fr
 
 /**
  * Escape a helper name for use inside a selector regular expression.
- * @param {string} name
+ * @param {string} name - a helper name from the consumer
+ * @returns {string} the name with anything but identifier characters removed and `$` escaped (empty if nothing is left)
  */
 function escapeName(name) {
+  // Characters an identifier cannot hold are dropped, not escaped: such a name could never match a call anyway.
   return name.replace(/[^A-Za-z0-9_$]/g, '').replace(/\$/g, '\\$')
 }
 
@@ -122,12 +157,16 @@ function escapeName(name) {
 export function templateUrlRestrictions(urlHelpers = URL_HELPERS) {
   const helpers = urlHelpers.map(escapeName).filter(Boolean).join('|')
   const attrs = URL_ATTRIBUTES.join('|')
+  // A safe expression: a literal, a template with no substitutions, `undefined`, or a call to a trusted helper.
   const safe = `Literal, TemplateLiteral[expressions.length=0], Identifier[name='undefined'], CallExpression[callee.name=/^(${helpers})$/]`
+  // A ternary is safe when neither branch is unsafe (written as a double negative, which esquery can express).
   const safeOrTernaryOfSafe =
     `${safe}, ConditionalExpression:not(:has(> .consequent:not(${safe}))):not(:has(> .alternate:not(${safe})))`
+  // `:x` and `v-bind:x` are the same directive in the AST.
   const bind = "VAttribute[directive=true][key.name.name='bind']"
   const message = `Bind URLs on native elements through ${urlHelpers.join(', ')} (or a literal).`
   return [
+    // A bound URL attribute whose expression is not safe.
     {
       selector:
         `${NATIVE} > VStartTag > ${bind}[key.argument.name=/^(${attrs})$/] > ` +
@@ -168,15 +207,19 @@ export function vueGlobs(files) {
   /** @type {string[]} */
   const out = []
   for (const f of files) {
+    // Only a trailing brace list (`*.{ts,vue}`) or a plain `.vue` suffix is understood; other globs are left out.
     const braces = f.match(/^(.*)\.\{([^}]*)\}$/)
     if (braces) {
       if (braces[2].split(',').map((e) => e.trim()).includes('vue')) out.push(`${braces[1]}.vue`)
     } else if (f.endsWith('.vue')) out.push(f)
   }
+  // Two script globs can imply the same .vue glob.
   return [...new Set(out)]
 }
 
+/** Extensions parsed by the TypeScript parser (directly, or inside a Vue single-file component's script). */
 const TS_EXTENSIONS = ['ts', 'mts', 'cts', 'tsx', 'vue']
+/** Extensions parsed as plain JavaScript. */
 const JS_EXTENSIONS = ['js', 'mjs', 'cjs', 'jsx']
 
 /**
@@ -193,6 +236,7 @@ export function splitGlobs(files) {
   /** @type {string[]} */
   const js = []
   for (const f of files) {
+    // `base` is the glob without its extension part; `exts` the extensions it names.
     const braces = f.match(/^(.*)\.\{([^}]*)\}$/)
     const base = braces ? braces[1] : f.replace(/\.[A-Za-z]+$/, '')
     const exts = braces ? braces[2].split(',').map((e) => e.trim()) : [f.slice(base.length + 1)]
@@ -200,6 +244,7 @@ export function splitGlobs(files) {
     const t = pick(TS_EXTENSIONS)
     const j = pick(JS_EXTENSIONS)
     const glob = (/** @type {string[]} */ list) => `${base}.${list.length === 1 ? list[0] : `{${list.join(',')}}`}`
+    // One glob may yield both kinds: `*.{ts,js}` becomes `*.ts` and `*.js`.
     if (t.length) ts.push(glob(t))
     if (j.length) js.push(glob(j))
   }
@@ -234,6 +279,7 @@ export function splitGlobs(files) {
  * @returns {import('eslint').Linter.Config[]}
  */
 export function suiBoundary(options = {}) {
+  // Defaults: app source only, every script extension; tests and files outside src/ are not app code.
   const files = options.files ?? ['src/**/*.{ts,mts,cts,tsx,js,mjs,cjs,jsx,vue}']
   const { ts: tsFiles, js: jsFiles } = splitGlobs(files)
   const vueFiles = options.vueFiles ?? vueGlobs(files)
@@ -245,6 +291,7 @@ export function suiBoundary(options = {}) {
 
   /** @type {import('eslint').Linter.Config[]} */
   const configs = [
+    // TypeScript and Vue: the typescript-eslint import rule, which understands `import type`.
     {
       name: '@meddleware/eslint-config/sui-boundary',
       files: tsFiles,
@@ -278,6 +325,7 @@ export function suiBoundary(options = {}) {
     })
   }
   if (walletFiles.length) {
+    // The wallet shim: the client import is allowed (no `patterns`), but JSON-RPC, commands, reads and transactions are not.
     configs.push({
       name: '@meddleware/eslint-config/sui-boundary-wallet',
       files: walletFiles,
@@ -290,6 +338,7 @@ export function suiBoundary(options = {}) {
     })
   }
   if (vueFiles.length) {
+    // Templates: the URL-binding rules, and no `v-html` (it renders markup unsanitised).
     configs.push({
       name: '@meddleware/eslint-config/template-urls',
       files: vueFiles,

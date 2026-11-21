@@ -27,9 +27,23 @@ bindings in Vue templates. Source is `src/index.js` (ESM with JSDoc types; `.d.t
 ## Release
 
 Bump `version`, push, tag `v<version>`; `npm-publish.yml` publishes with npm trusted publishing.
-Consumers (walrus-storage-ui, access-gate-ui, sealed-storage-ui, dao-ui, treasury-ui, token-issuance-ui, dashboard, landing)
-take `^0.0.x` — an exact pin on 0.0.x — so bump them together. CI and the tag workflow run the same
-`node-ci.yml` (audit, type-check, tests, build, package contents).
+Consumers take `^0.0.x` — an exact pin on 0.0.x — so bump them together. They are `@meddleware/frontend-config`
+(a dependency: its `vueApp({ sui: true })` appends the boundary, which is how the apps and the shared Vue packages
+get it) and `dao-ui`, the one app that imports `suiBoundary` directly. Release frontend-config after this package, then the
+apps on it. CI and the tag workflow run the same `node-ci.yml` (audit, type-check, tests, build, package contents).
+
+## Commands
+
+```bash
+npm ci && npm run type-check && npm test   # what CI checks, short of the build and the tarball check
+npm run build && npm pack --dry-run        # dist/index.d.ts and the tarball's file list
+```
+
+## Related
+
+- The audit: [`docs/audit/eslint-config-audit.md`](docs/audit/eslint-config-audit.md).
+- The boundary decision: workspace ADR-0001 (chain access through the domain clients only).
+- How to propose a change: [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## Interoperability
 
