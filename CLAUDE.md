@@ -39,6 +39,10 @@ npm ci && npm run type-check && npm test   # what CI checks, short of the build 
 npm run build && npm pack --dry-run        # dist/index.d.ts and the tarball's file list
 ```
 
+## Documentation rules (workspace documentation standard, D144)
+
+Every file has a header and every declaration a TSDoc comment (private declarations included); comments say why. `node scripts/check-docs.mjs --report eslint-config` (in the workspace repository) is the gate. See [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Related
 
 - The audit: [`docs/audit/eslint-config-audit.md`](docs/audit/eslint-config-audit.md).
