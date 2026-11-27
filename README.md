@@ -75,6 +75,19 @@ The building blocks are exported too: `restrictedImportOptions`, `scriptRestrict
 Use `eslint --report-unused-disable-directives` and require a reason on every `eslint-disable` of these
 rules: a disable also hides a real hit.
 
+## Documentation rule
+
+`docsRules({ plugin })` returns flat-config objects that require a doc comment on every function, method, class, interface, type alias and enum (the workspace documentation standard, D144). The plugin is handed in, so this package gains no dependency:
+
+```js
+import jsdoc from 'eslint-plugin-jsdoc'
+import { docsRules } from '@meddleware/eslint-config'
+
+export default [/* ... */, ...docsRules({ plugin: jsdoc })]
+```
+
+Options: `params: true` also requires `@param` and `@returns` tags; `files` and `ignores` change where it applies (default: `src/`, not tests or declaration files). A repository turns it on in the same change that documents its files, so CI never fails on files nobody has touched.
+
 ## Development
 
 There is no bundling step: the package ships `src/index.js` as it is, plus the type declarations built from its JSDoc.

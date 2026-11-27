@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.5] - 2026-11-27
+
+### Added
+- `docsRules({ plugin, params?, files?, ignores? })`: the documentation rule of the workspace standard (a doc comment on every function, method, class, interface, type alias and enum, through `eslint-plugin-jsdoc`, which the caller passes in). Off until a consumer appends it.
+
 ### Changed
 - Documentation pass (line-level annotation): the source, the tests, the workflows and the configuration files explain
   themselves; a Development section in the README; Commands and Related sections in CLAUDE.md, whose consumer list now

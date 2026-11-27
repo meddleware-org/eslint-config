@@ -1,6 +1,6 @@
 {
   "name": "@meddleware/eslint-config",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "type": "module",
   "description": "Shared ESLint flat-config fragments for MeddleWare apps: the Sui chain-access boundary and URL-binding rules.",
   "license": "0BSD",
@@ -38,6 +38,7 @@
   "devDependencies": {
     "@types/node": "~26.6.5",
     "eslint": "^10.11.0",
+    "eslint-plugin-jsdoc": "^65.5.6",
     "eslint-plugin-vue": "^10.11.1",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.70.1",

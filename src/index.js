@@ -355,3 +355,43 @@ export function suiBoundary(options = {}) {
   }
   return configs
 }
+
+/**
+ * The documentation rule of the workspace documentation standard (D144): every function, method and class has a doc comment, and
+ * with `params: true` the comment also names every parameter and return value. The plugin is passed in, not imported, so this
+ * package keeps no runtime dependency: a consumer imports `eslint-plugin-jsdoc` itself and hands it over.
+ * @param {object} options - the settings
+ * @param {object} options.plugin - the default export of `eslint-plugin-jsdoc`
+ * @param {boolean} [options.params] - also require `@param` and `@returns` tags (off by default: the standard asks for them on exported items)
+ * @param {string[]} [options.files] - the files the rule applies to (default: the sources, not the tests)
+ * @param {string[]} [options.ignores] - files exempt from it (default: test files and declaration files)
+ * @returns {import('eslint').Linter.Config[]} flat-config objects to append to a consumer's configuration
+ */
+export function docsRules(options) {
+  const { plugin, params = false } = options
+  if (!plugin) throw new Error('docsRules({ plugin }): pass the default export of eslint-plugin-jsdoc')
+  const files = options.files ?? ['src/**/*.{ts,mts,cts,tsx,js,mjs,cjs,jsx,vue}']
+  const ignores = options.ignores ?? ['**/*.test.*', '**/*.spec.*', '**/__tests__/**', '**/*.d.ts']
+  return [
+    {
+      name: '@meddleware/eslint-config/docs',
+      files,
+      ignores,
+      plugins: { jsdoc: plugin },
+      rules: {
+        // A TSDoc comment on every declaration that is a function, method or class (private ones included).
+        'jsdoc/require-jsdoc': [
+          'error',
+          {
+            publicOnly: false,
+            require: { FunctionDeclaration: true, MethodDefinition: true, ClassDeclaration: true, ArrowFunctionExpression: false, FunctionExpression: false },
+            contexts: ['TSInterfaceDeclaration', 'TSTypeAliasDeclaration', 'TSEnumDeclaration'],
+          },
+        ],
+        // The parameter and return tags, only when asked for.
+        'jsdoc/require-param': params ? ['error'] : 'off',
+        'jsdoc/require-returns': params ? ['error'] : 'off',
+      },
+    },
+  ]
+}
